@@ -14,7 +14,7 @@
 Scene::Scene()
 {
     suzanne = std::make_unique<ew::Model>("assets/models/suzanne.obj");
-    blinnphong = std::make_unique<ew::Shader>("assets/shaders/default.vs", "assets/shaders/default.fs");
+    blinnphong = std::make_unique<ew::Shader>("assets/shaders/blinnphong.vs", "assets/shaders/blinnphong.fs");
 }
 
 Scene::~Scene()
@@ -48,6 +48,8 @@ void Scene::Render(void)
     blinnphong->setMat4("model", matrix);
     blinnphong->setMat4("view_proj", view_proj);
     blinnphong->setVec3("camera_position", camera.position);
+
+    blinnphong->setVec3("light_direction", glm::vec3(0.0f, -1.0f, 0.0f));
 
     // draw suzanne
     suzanne->draw();
