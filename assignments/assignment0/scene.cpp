@@ -8,13 +8,25 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/type_ptr.hpp"
 
-// batteries
+#include "batteries/materials.h"
+#include "batteries/math.h"
 #include "batteries/opengl.h"
+
+glm::mat4 lightMatrix = glm::mat4(1.0f);
+
+const glm::vec4 backgroundColor = glm::vec4(0.6f, 0.8f, 0.92f, 1.0f);
 
 Scene::Scene()
 {
     suzanne = std::make_unique<ew::Model>("assets/models/suzanne.obj");
     blinnphong = std::make_unique<ew::Shader>("assets/shaders/blinnphong.vs", "assets/shaders/blinnphong.fs");
+    texture = std::make_unique<ew::Texture>("assets/ornament-color.jpg");
+
+    light = {
+        .brightness = 1.0f,
+        .color = {1.0f, 1.0f, 1.0f},
+        .position = {0.0f, 2.0f, 0.0f},
+    };
 }
 
 Scene::~Scene()
@@ -24,8 +36,6 @@ Scene::~Scene()
 void Scene::Update(float dt)
 {
     batteries::Scene::Update(dt);
-
-    /* body */
 }
 
 auto matrix = glm::mat4(1.0f);
@@ -34,24 +44,32 @@ void Scene::Render(void)
 {
     const auto view_proj = camera.Projection() * camera.View();
 
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    glClearColor(backgroundColor.x, backgroundColor.y, backgroundColor.z, backgroundColor.w);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
     glEnable(GL_DEPTH_TEST);
-    // glDisable(GL_DEPTH_TEST);
+
+    glBindTextureUnit(0, texture->getID());
 
     blinnphong->use();
 
-    // scene matrices
+    blinnphong->setInt("texture0", 0);
+
     blinnphong->setMat4("model", matrix);
     blinnphong->setMat4("view_proj", view_proj);
     blinnphong->setVec3("camera_position", camera.position);
 
-    blinnphong->setVec3("light_direction", glm::vec3(0.0f, -1.0f, 0.0f));
+    blinnphong->setVec3("light.position", light.position);
+    blinnphong->setVec3("light.color", light.color);
 
-    // draw suzanne
+    // hardcoded for now
+    blinnphong->setFloat("material.shininess", 128.0f);
+    blinnphong->setVec3("material.diffuse", glm::vec3(0.5f));
+    blinnphong->setVec3("material.specular", glm::vec3(0.5f));
+    blinnphong->setVec3("material.ambient", glm::vec3(backgroundColor) * 0.5f);
+
     suzanne->draw();
 }
 
@@ -64,15 +82,17 @@ void Scene::Debug(void)
     glm::mat4 m{1.0f};
     auto *view = glm::value_ptr(camera.View());
     auto *proj = glm::value_ptr(camera.Projection());
-    
-    ImGuizmo::DrawGrid(view, proj, glm::value_ptr(m), 100.0f);
+
+    if (ImGuizmo::IsUsing()) {
+        light.position = glm::vec3(lightMatrix[3]);
+    }
 
     ImGuizmo::Manipulate(
         view,
         proj,
-        ImGuizmo::ROTATE,
+        ImGuizmo::TRANSLATE,
         ImGuizmo::WORLD,
-        glm::value_ptr(matrix)
+        glm::value_ptr(lightMatrix)
     );
 
     cameracontroller.Debug();
