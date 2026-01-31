@@ -1,10 +1,8 @@
 #include "scene.h"
 
-// imgui
 #include "imgui/imgui.h"
 #include "imguizmo/imguizmo.h"
 
-// glm
 #include "glm/glm.hpp"
 #include "glm/gtc/type_ptr.hpp"
 
@@ -15,6 +13,12 @@
 glm::mat4 lightMatrix = glm::mat4(1.0f);
 
 const glm::vec4 backgroundColor = glm::vec4(0.6f, 0.8f, 0.92f, 1.0f);
+
+struct {
+    float shininess = 128.0f;
+    float kd = 0.5f;
+    float ks = 0.5f;
+} debug;
 
 Scene::Scene()
 {
@@ -64,10 +68,9 @@ void Scene::Render(void)
     blinnphong->setVec3("light.position", light.position);
     blinnphong->setVec3("light.color", light.color);
 
-    // hardcoded for now
-    blinnphong->setFloat("material.shininess", 128.0f);
-    blinnphong->setVec3("material.diffuse", glm::vec3(0.5f));
-    blinnphong->setVec3("material.specular", glm::vec3(0.5f));
+    blinnphong->setFloat("material.shininess", debug.shininess);
+    blinnphong->setVec3("material.diffuse", glm::vec3(debug.kd));
+    blinnphong->setVec3("material.specular", glm::vec3(debug.ks));
     blinnphong->setVec3("material.ambient", glm::vec3(backgroundColor) * 0.5f);
 
     suzanne->draw();
@@ -97,12 +100,16 @@ void Scene::Debug(void)
 
     cameracontroller.Debug();
 
-    ImGui::Begin("Controlls", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+    ImGui::Begin("Controls", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
 
     ImGui::Checkbox("Paused", &time.paused);
     ImGui::SliderFloat("Time Factor", &time.factor, 0.0f, 10.0f);
 
-    /* build debug ui here */
+    ImGui::ColorEdit3("Light Color", &light.color.x);
+
+    ImGui::SliderFloat("Diffuse (Kd)", &debug.kd, 0.0f, 1.0f);
+    ImGui::SliderFloat("Specular (Ks)", &debug.ks, 0.0f, 1.0f);
+    ImGui::SliderFloat("Shininess", &debug.shininess, 2.0f, 1024.0f);
 
     ImGui::End();
 }
