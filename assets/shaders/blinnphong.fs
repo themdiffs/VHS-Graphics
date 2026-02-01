@@ -42,7 +42,7 @@ vec3 blinnPhong(vec3 normal, vec3 frag_pos, vec3 light_pos, vec3 light_color) {
 
 void main()
 {
-  vec3 normal = texture(normal_map, vs_texcoord).rgb;
+  vec3 normal = texture(normal_map, vs_texcoord).rgb * 2.0 - 1.0;
   normal = normalize(vs_tbn * normal);
 
   vec3 object_color = texture(texture0, vs_texcoord).rgb;

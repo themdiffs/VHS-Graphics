@@ -22,9 +22,10 @@ struct {
 
 Scene::Scene()
 {
-    suzanne = std::make_unique<ew::Model>("assets/models/suzanne.obj");
+    suzanne = std::make_unique<ew::Model>("assets/models/suzanne.fbx");
     blinnphong = std::make_unique<ew::Shader>("assets/shaders/blinnphong.vs", "assets/shaders/blinnphong.fs");
     texture = std::make_unique<ew::Texture>("assets/ornament-color.jpg");
+    normalmap = std::make_unique<ew::Texture>("assets/ornament-normal.jpg");
 
     light = {
         .brightness = 1.0f,
@@ -56,6 +57,7 @@ void Scene::Render(void)
     glEnable(GL_DEPTH_TEST);
 
     glBindTextureUnit(0, texture->getID());
+    glBindTextureUnit(1, normalmap->getID()); 
 
     blinnphong->use();
 
@@ -72,6 +74,7 @@ void Scene::Render(void)
     blinnphong->setVec3("material.diffuse", glm::vec3(debug.kd));
     blinnphong->setVec3("material.specular", glm::vec3(debug.ks));
     blinnphong->setVec3("material.ambient", glm::vec3(backgroundColor) * 0.5f);
+    blinnphong->setInt("normal_map", 1);
 
     suzanne->draw();
 }
