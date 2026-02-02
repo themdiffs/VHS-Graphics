@@ -1,0 +1,65 @@
+diff --git a/assignments/assignment0/scene.cpp b/assignments/assignment0/scene.cpp
+index 7b68117..38ab2dc 100644
+--- a/assignments/assignment0/scene.cpp
++++ b/assignments/assignment0/scene.cpp
+@@ -22,7 +22,7 @@ struct {
+ 
+ Scene::Scene()
+ {
+-    suzanne = std::make_unique<ew::Model>("assets/models/suzanne.fbx");
++    suzanne = std::make_unique<ew::Model>("assets/models/suzanne.obj");
+     blinnphong = std::make_unique<ew::Shader>("assets/shaders/blinnphong.vs", "assets/shaders/blinnphong.fs");
+     texture = std::make_unique<ew::Texture>("assets/ornament-color.jpg");
+     normalmap = std::make_unique<ew::Texture>("assets/ornament-normal.jpg");
+diff --git a/libs/ew/mesh.cpp b/libs/ew/mesh.cpp
+index 0d2a97e..44d7251 100644
+--- a/libs/ew/mesh.cpp
++++ b/libs/ew/mesh.cpp
+@@ -36,6 +36,10 @@ namespace ew {
+ 			glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)(offsetof(Vertex, uv)));
+ 			glEnableVertexAttribArray(2);
+ 
++			// tangent attribute
++			glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, tangent));
++			glEnableVertexAttribArray(3);
++
+ 			m_initialized = true;
+ 		}
+ 
+diff --git a/libs/ew/mesh.h b/libs/ew/mesh.h
+index 841fb49..7ffa5b3 100644
+--- a/libs/ew/mesh.h
++++ b/libs/ew/mesh.h
+@@ -11,6 +11,7 @@ namespace ew {
+ 		glm::vec3 pos;
+ 		glm::vec3 normal;
+ 		glm::vec2 uv;
++		glm::vec3 tangent;
+ 	};
+ 
+ 	struct MeshData {
+diff --git a/libs/ew/model.cpp b/libs/ew/model.cpp
+index 54d3384..c91b6d5 100644
+--- a/libs/ew/model.cpp
++++ b/libs/ew/model.cpp
+@@ -18,7 +18,7 @@ namespace ew {
+ 	Model::Model(const std::string& filePath)
+ 	{
+ 		Assimp::Importer importer;
+-		const aiScene* aiScene = importer.ReadFile(filePath, aiProcess_Triangulate);
++		const aiScene* aiScene = importer.ReadFile(filePath, aiProcess_Triangulate | aiProcess_FlipUVs);
+ 		for (size_t i = 0; i < aiScene->mNumMeshes; i++)
+ 		{
+ 			aiMesh* aiMesh = aiScene->mMeshes[i];
+@@ -52,7 +52,11 @@ namespace ew {
+ 				vertex.uv = glm::vec2(convertAIVec3(aiMesh->mTextureCoords[0][i]));
+ 			}
+ 			meshData.vertices.push_back(vertex);
++			if (aiMesh->HasTangentsAndBitangents()) {
++ 		   		vertex.tangent = convertAIVec3(aiMesh->mTangents[i]);
++			}
+ 		}
++
+ 		//Convert faces to indices
+ 		for (size_t i = 0; i < aiMesh->mNumFaces; i++)
+ 		{

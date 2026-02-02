@@ -22,7 +22,7 @@ struct {
 
 Scene::Scene()
 {
-    suzanne = std::make_unique<ew::Model>("assets/models/suzanne.fbx");
+    suzanne = std::make_unique<ew::Model>("assets/models/suzanne.obj");
     blinnphong = std::make_unique<ew::Shader>("assets/shaders/blinnphong.vs", "assets/shaders/blinnphong.fs");
     texture = std::make_unique<ew::Texture>("assets/ornament-color.jpg");
     normalmap = std::make_unique<ew::Texture>("assets/ornament-normal.jpg");
