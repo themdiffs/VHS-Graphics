@@ -23,7 +23,7 @@ struct {
 Scene::Scene()
 {
     suzanne = std::make_unique<ew::Model>("assets/models/suzanne.obj");
-    blinnphong = std::make_unique<ew::Shader>("assets/shaders/blinnphong.vs", "assets/shaders/blinnphong.fs");
+    toon = std::make_unique<ew::Shader>("assets/shaders/toon.vs", "assets/shaders/toon.fs");
     texture = std::make_unique<ew::Texture>("assets/ornament-color.jpg");
     normalmap = std::make_unique<ew::Texture>("assets/ornament-normal.jpg");
 
@@ -59,22 +59,22 @@ void Scene::Render(void)
     glBindTextureUnit(0, texture->getID());
     glBindTextureUnit(1, normalmap->getID()); 
 
-    blinnphong->use();
+    toon->use();
 
-    blinnphong->setInt("texture0", 0);
+    toon->setInt("texture0", 0);
 
-    blinnphong->setMat4("model", matrix);
-    blinnphong->setMat4("view_proj", view_proj);
-    blinnphong->setVec3("camera_position", camera.position);
+    toon->setMat4("model", matrix);
+    toon->setMat4("view_proj", view_proj);
+    toon->setVec3("camera_position", camera.position);
 
-    blinnphong->setVec3("light.position", light.position);
-    blinnphong->setVec3("light.color", light.color);
+    toon->setVec3("light.position", light.position);
+    toon->setVec3("light.color", light.color);
 
-    blinnphong->setFloat("material.shininess", debug.shininess);
-    blinnphong->setVec3("material.diffuse", glm::vec3(debug.kd));
-    blinnphong->setVec3("material.specular", glm::vec3(debug.ks));
-    blinnphong->setVec3("material.ambient", glm::vec3(backgroundColor) * 0.5f);
-    blinnphong->setInt("normal_map", 1);
+    toon->setFloat("material.shininess", debug.shininess);
+    toon->setVec3("material.diffuse", glm::vec3(debug.kd));
+    toon->setVec3("material.specular", glm::vec3(debug.ks));
+    toon->setVec3("material.ambient", glm::vec3(backgroundColor) * 0.5f);
+    toon->setInt("normal_map", 1);
 
     suzanne->draw();
 }
