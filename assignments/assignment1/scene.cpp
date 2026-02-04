@@ -11,7 +11,6 @@
 #include "batteries/opengl.h"
 
 glm::mat4 lightMatrix = glm::mat4(1.0f);
-
 const glm::vec4 backgroundColor = glm::vec4(0.6f, 0.8f, 0.92f, 1.0f);
 
 struct {
@@ -25,12 +24,17 @@ Scene::Scene()
     suzanne = std::make_unique<ew::Model>("assets/models/suzanne.obj");
     toon = std::make_unique<ew::Shader>("assets/shaders/toon.vs", "assets/shaders/toon.fs");
     texture = std::make_unique<ew::Texture>("assets/ornament-color.jpg");
-    normalmap = std::make_unique<ew::Texture>("assets/ornament-normal.jpg");
+    gradientTexture = std::make_unique<ew::Texture>("assets/textures/ZAtoon.png");
 
     light = {
         .brightness = 1.0f,
         .color = {1.0f, 1.0f, 1.0f},
         .position = {0.0f, 2.0f, 0.0f},
+    };
+
+    palette = {
+        .color1 = {1.0f, 0.0f, 1.0f},
+        .color2 = {0.0f, 0.0f, 1.0f},
     };
 }
 
@@ -57,11 +61,12 @@ void Scene::Render(void)
     glEnable(GL_DEPTH_TEST);
 
     glBindTextureUnit(0, texture->getID());
-    glBindTextureUnit(1, normalmap->getID()); 
+    glBindTextureUnit(1, gradientTexture->getID());
 
     toon->use();
 
     toon->setInt("texture0", 0);
+    toon->setInt("gradientTex", 1);
 
     toon->setMat4("model", matrix);
     toon->setMat4("view_proj", view_proj);
@@ -69,12 +74,14 @@ void Scene::Render(void)
 
     toon->setVec3("light.position", light.position);
     toon->setVec3("light.color", light.color);
-
     toon->setFloat("material.shininess", debug.shininess);
+
+    toon->setVec3("pal.color1", palette.color1);
+    toon->setVec3("pal.color2", palette.color2);
+
     toon->setVec3("material.diffuse", glm::vec3(debug.kd));
     toon->setVec3("material.specular", glm::vec3(debug.ks));
     toon->setVec3("material.ambient", glm::vec3(backgroundColor) * 0.5f);
-    toon->setInt("normal_map", 1);
 
     suzanne->draw();
 }
@@ -113,6 +120,9 @@ void Scene::Debug(void)
     ImGui::SliderFloat("Diffuse (Kd)", &debug.kd, 0.0f, 1.0f);
     ImGui::SliderFloat("Specular (Ks)", &debug.ks, 0.0f, 1.0f);
     ImGui::SliderFloat("Shininess", &debug.shininess, 2.0f, 1024.0f);
+
+    ImGui::ColorEdit3("Color1", &palette.color1[0]);
+    ImGui::ColorEdit3("Color2", &palette.color2[0]);
 
     ImGui::End();
 }
