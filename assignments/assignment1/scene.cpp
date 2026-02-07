@@ -15,8 +15,6 @@ const glm::vec4 backgroundColor = glm::vec4(0.6f, 0.8f, 0.92f, 1.0f);
 
 struct {
     float shininess = 128.0f;
-    float kd = 0.5f;
-    float ks = 0.5f;
 } debug;
 
 Scene::Scene()
@@ -31,6 +29,8 @@ Scene::Scene()
         .color = {1.0f, 1.0f, 1.0f},
         .position = {0.0f, 2.0f, 0.0f},
     };
+
+    lightMatrix[3] = glm::vec4(light.position, 1.0f);
 
     palette = {
         .color1 = {1.0f, 0.0f, 1.0f},
@@ -79,8 +79,8 @@ void Scene::Render(void)
     toon->setVec3("pal.color1", palette.color1);
     toon->setVec3("pal.color2", palette.color2);
 
-    toon->setVec3("material.diffuse", glm::vec3(debug.kd));
-    toon->setVec3("material.specular", glm::vec3(debug.ks));
+    toon->setVec3("material.diffuse", glm::vec3(1));
+    toon->setVec3("material.specular", glm::vec3(1));
     toon->setVec3("material.ambient", glm::vec3(backgroundColor) * 0.5f);
 
     suzanne->draw();
@@ -116,9 +116,6 @@ void Scene::Debug(void)
     ImGui::SliderFloat("Time Factor", &time.factor, 0.0f, 10.0f);
 
     ImGui::ColorEdit3("Light Color", &light.color.x);
-
-    ImGui::SliderFloat("Diffuse (Kd)", &debug.kd, 0.0f, 1.0f);
-    ImGui::SliderFloat("Specular (Ks)", &debug.ks, 0.0f, 1.0f);
     ImGui::SliderFloat("Shininess", &debug.shininess, 2.0f, 1024.0f);
 
     ImGui::ColorEdit3("Color1", &palette.color1[0]);
