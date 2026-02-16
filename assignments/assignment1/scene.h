@@ -2,6 +2,7 @@
 
 #include "batteries/scene.h"
 #include "batteries/lights.h"
+#include "batteries/opengl.h"
 
 #include "ew/model.h"
 #include "ew/shader.h"
@@ -22,12 +23,20 @@ class Scene final : public batteries::Scene
     std::unique_ptr<ew::Shader> toon;
     std::unique_ptr<ew::Texture> texture;
     std::unique_ptr<ew::Texture> gradientTexture;
+    
+    std::unique_ptr<ew::Shader> postprocess;
 
     batteries::ambient_t ambient;
     batteries::light_t light;
 
-    struct {
-      glm::vec3 color1;
-      glm::vec3 color2;
+    GLuint fbo;
+    GLuint fbo_texture;
+    GLuint fbo_depth;
+
+    struct
+    {
+        glm::vec3 color1;
+        glm::vec3 color2;
+
     } palette;
 };
