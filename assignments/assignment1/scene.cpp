@@ -22,7 +22,7 @@ struct FullScreenQuad
             // pos (x, y),
             // texcoord (u, v)
             // triangle 1
-            -1.0f, 1.0f, 0.0f, 1.0f,   
+            -1.0f, 1.0f, 0.0f, 1.0f,
             -1.0f, -1.0f, 0.0f, 0.0f,
             1.0f, -1.0f, 1.0f, 0.0f,
 
@@ -56,6 +56,12 @@ struct FullScreenQuad
 glm::mat4 lightMatrix = glm::mat4(1.0f);
 const glm::vec4 backgroundColor = glm::vec4(0.6f, 0.8f, 0.92f, 1.0f);
 
+static int current_effect = 0;
+static const char* effect_names[] = {
+    "None",
+    "Greyscale",
+};
+
 struct {
     float shininess = 128.0f;
 } debug;
@@ -69,7 +75,8 @@ Scene::Scene()
     texture = std::make_unique<ew::Texture>("assets/ornament-color.jpg");
     gradientTexture = std::make_unique<ew::Texture>("assets/textures/ZAtoon.png");
 
-    postprocess = std::make_unique<ew::Shader>("assets/shaders/fullscreen.vs", "assets/shaders/fullscreen.fs");
+    postprocess_none = std::make_unique<ew::Shader>("assets/shaders/fullscreen.vs", "assets/shaders/fullscreen.fs");
+    postprocess_greyscale = std::make_unique<ew::Shader>("assets/shaders/fullscreen.vs", "assets/shaders/greyscale.fs");
 
     light = {
         .brightness = 1.0f,
@@ -174,8 +181,16 @@ void Scene::Render(void)
 
     // post processing pipeline
     {
-        postprocess->use();
-        postprocess->setInt("screen", 0);
+        if (current_effect == 0)
+        {
+            postprocess_none->use();
+            postprocess_none->setInt("screen", 0);
+        }
+        else if (current_effect == 1)
+        {
+            postprocess_greyscale->use();
+            postprocess_greyscale->setInt("screen", 0);
+        }
 
         glDisable(GL_DEPTH_TEST);
         glClearColor(1.0f, 0.3f, 0.3f, 1.0f);
@@ -222,6 +237,8 @@ void Scene::Debug(void)
 
     ImGui::ColorEdit3("Color1", &palette.color1[0]);
     ImGui::ColorEdit3("Color2", &palette.color2[0]);
+
+    ImGui::Combo("Effect", &current_effect, effect_names, IM_ARRAYSIZE(effect_names));
 
     ImGui::Image(
         (void*)(intptr_t)fbo_texture,
