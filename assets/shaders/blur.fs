@@ -6,6 +6,7 @@ out vec4 FragColor;
 in vec2 vs_texcoord;
 
 uniform sampler2D screen;
+uniform float strength;
 
 const float offset = 1.0 / 300.0;
 
@@ -33,7 +34,7 @@ void main()
   for (int i = 0; i < 9; i++)
   {
     vec3 local = vec3(texture(screen, vs_texcoord.xy + offsets[i]));
-    color += local * kernel[i] / 16.0;
+    color += local * kernel[i] / strength;
   }
   FragColor = vec4(color, 1.0);
 }

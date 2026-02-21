@@ -26,6 +26,7 @@ class Scene final : public batteries::Scene
     
     std::unique_ptr<ew::Shader> postprocess_none;
     std::unique_ptr<ew::Shader> postprocess_greyscale;
+    std::unique_ptr<ew::Shader> postprocess_blur;
 
     batteries::ambient_t ambient;
     batteries::light_t light;

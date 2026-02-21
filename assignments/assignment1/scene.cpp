@@ -60,10 +60,12 @@ static int current_effect = 0;
 static const char* effect_names[] = {
     "None",
     "Greyscale",
+    "Blur",
 };
 
 struct {
     float shininess = 128.0f;
+    float blur_strength = 16.0f;
 } debug;
 
 
@@ -77,6 +79,7 @@ Scene::Scene()
 
     postprocess_none = std::make_unique<ew::Shader>("assets/shaders/fullscreen.vs", "assets/shaders/fullscreen.fs");
     postprocess_greyscale = std::make_unique<ew::Shader>("assets/shaders/fullscreen.vs", "assets/shaders/greyscale.fs");
+    postprocess_blur = std::make_unique<ew::Shader>("assets/shaders/fullscreen.vs", "assets/shaders/blur.fs");
 
     light = {
         .brightness = 1.0f,
@@ -191,6 +194,12 @@ void Scene::Render(void)
             postprocess_greyscale->use();
             postprocess_greyscale->setInt("screen", 0);
         }
+        else if (current_effect == 2)
+        {
+            postprocess_blur->use();
+            postprocess_blur->setInt("screen", 0);
+            postprocess_blur->setFloat("strength", debug.blur_strength);
+        }
 
         glDisable(GL_DEPTH_TEST);
         glClearColor(1.0f, 0.3f, 0.3f, 1.0f);
@@ -239,6 +248,11 @@ void Scene::Debug(void)
     ImGui::ColorEdit3("Color2", &palette.color2[0]);
 
     ImGui::Combo("Effect", &current_effect, effect_names, IM_ARRAYSIZE(effect_names));
+
+    if (current_effect == 2)
+    {
+        ImGui::SliderFloat("Blur Strength", &debug.blur_strength, 1.0f, 64.0f);
+    }
 
     ImGui::Image(
         (void*)(intptr_t)fbo_texture,
