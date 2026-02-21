@@ -61,6 +61,7 @@ static const char* effect_names[] = {
     "None",
     "Greyscale",
     "Blur",
+    "Invert",
 };
 
 struct {
@@ -80,6 +81,7 @@ Scene::Scene()
     postprocess_none = std::make_unique<ew::Shader>("assets/shaders/fullscreen.vs", "assets/shaders/fullscreen.fs");
     postprocess_greyscale = std::make_unique<ew::Shader>("assets/shaders/fullscreen.vs", "assets/shaders/greyscale.fs");
     postprocess_blur = std::make_unique<ew::Shader>("assets/shaders/fullscreen.vs", "assets/shaders/blur.fs");
+    postprocess_invert = std::make_unique<ew::Shader>("assets/shaders/fullscreen.vs", "assets/shaders/invert.fs");
 
     light = {
         .brightness = 1.0f,
@@ -199,6 +201,11 @@ void Scene::Render(void)
             postprocess_blur->use();
             postprocess_blur->setInt("screen", 0);
             postprocess_blur->setFloat("strength", debug.blur_strength);
+        }
+        else if (current_effect == 3)
+        {
+            postprocess_invert->use();
+            postprocess_invert->setInt("screen", 0);
         }
 
         glDisable(GL_DEPTH_TEST);
