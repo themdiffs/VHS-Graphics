@@ -65,6 +65,8 @@ static const char* effect_names[] = {
     "Edge Detect",
     "Sharpen",
     "Chromatic Aberration",
+    "Vignette",
+    "Lens Distortion",
 };
 
 struct {
@@ -72,6 +74,8 @@ struct {
     float blur_strength = 16.0f;
     float sharpen_strength = 1.0f;
     float chromatic_offset = 0.005f;
+    float vignette_intensity = 0.5f;
+    float lens_strength = 0.5f;
 } debug;
 
 Scene::Scene()
@@ -88,6 +92,8 @@ Scene::Scene()
     postprocess_edgedetect = std::make_unique<ew::Shader>("assets/shaders/fullscreen.vs", "assets/shaders/edgedetect.fs");
     postprocess_sharpen = std::make_unique<ew::Shader>("assets/shaders/fullscreen.vs", "assets/shaders/sharpen.fs");
     postprocess_chromatic = std::make_unique<ew::Shader>("assets/shaders/fullscreen.vs", "assets/shaders/chromatic.fs");
+    postprocess_vignette = std::make_unique<ew::Shader>("assets/shaders/fullscreen.vs", "assets/shaders/vignette.fs");
+    postprocess_lensdistortion = std::make_unique<ew::Shader>("assets/shaders/fullscreen.vs", "assets/shaders/lensdistortion.fs");
 
     light = {
         .brightness = 1.0f,
@@ -225,6 +231,16 @@ void Scene::Render(void)
             postprocess_chromatic->setInt("screen", 0);
             postprocess_chromatic->setFloat("offset", debug.chromatic_offset);
             break;
+        case 7:
+            postprocess_vignette->use();
+            postprocess_vignette->setInt("screen", 0);
+            postprocess_vignette->setFloat("intensity", debug.vignette_intensity);
+            break;
+        case 8:
+            postprocess_lensdistortion->use();
+            postprocess_lensdistortion->setInt("screen", 0);
+            postprocess_lensdistortion->setFloat("strength", debug.lens_strength);
+            break;
         }
 
         glDisable(GL_DEPTH_TEST);
@@ -285,6 +301,12 @@ void Scene::Debug(void)
         break;
     case 6:
         ImGui::SliderFloat("Aberration Offset", &debug.chromatic_offset, 0.001f, 0.02f);
+        break;
+    case 7:
+        ImGui::SliderFloat("Vignette Intensity", &debug.vignette_intensity, 0.0f, 1.5f);
+        break;
+    case 8:
+        ImGui::SliderFloat("Distortion", &debug.lens_strength, 0.0f, 2.0f);
         break;
     }
 

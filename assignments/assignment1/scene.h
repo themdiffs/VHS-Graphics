@@ -31,6 +31,8 @@ class Scene final : public batteries::Scene
     std::unique_ptr<ew::Shader> postprocess_edgedetect;
     std::unique_ptr<ew::Shader> postprocess_sharpen;
     std::unique_ptr<ew::Shader> postprocess_chromatic;
+    std::unique_ptr<ew::Shader> postprocess_vignette;
+    std::unique_ptr<ew::Shader> postprocess_lensdistortion;
 
     batteries::ambient_t ambient;
     batteries::light_t light;
