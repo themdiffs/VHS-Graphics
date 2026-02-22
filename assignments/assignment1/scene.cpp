@@ -63,14 +63,16 @@ static const char* effect_names[] = {
     "Blur",
     "Invert",
     "Edge Detect",
+    "Sharpen",
+    "Chromatic Aberration",
 };
 
 struct {
     float shininess = 128.0f;
     float blur_strength = 16.0f;
+    float sharpen_strength = 1.0f;
+    float chromatic_offset = 0.005f;
 } debug;
-
-
 
 Scene::Scene()
 {
@@ -84,6 +86,8 @@ Scene::Scene()
     postprocess_blur = std::make_unique<ew::Shader>("assets/shaders/fullscreen.vs", "assets/shaders/blur.fs");
     postprocess_invert = std::make_unique<ew::Shader>("assets/shaders/fullscreen.vs", "assets/shaders/invert.fs");
     postprocess_edgedetect = std::make_unique<ew::Shader>("assets/shaders/fullscreen.vs", "assets/shaders/edgedetect.fs");
+    postprocess_sharpen = std::make_unique<ew::Shader>("assets/shaders/fullscreen.vs", "assets/shaders/sharpen.fs");
+    postprocess_chromatic = std::make_unique<ew::Shader>("assets/shaders/fullscreen.vs", "assets/shaders/chromatic.fs");
 
     light = {
         .brightness = 1.0f,
@@ -211,6 +215,16 @@ void Scene::Render(void)
             postprocess_edgedetect->use();
             postprocess_edgedetect->setInt("screen", 0);
             break;
+        case 5:
+            postprocess_sharpen->use();
+            postprocess_sharpen->setInt("screen", 0);
+            postprocess_sharpen->setFloat("strength", debug.sharpen_strength);
+            break;
+        case 6:
+            postprocess_chromatic->use();
+            postprocess_chromatic->setInt("screen", 0);
+            postprocess_chromatic->setFloat("offset", debug.chromatic_offset);
+            break;
         }
 
         glDisable(GL_DEPTH_TEST);
@@ -261,9 +275,17 @@ void Scene::Debug(void)
 
     ImGui::Combo("Effect", &current_effect, effect_names, IM_ARRAYSIZE(effect_names));
 
-    if (current_effect == 2)
+    switch (current_effect)
     {
+    case 2:
         ImGui::SliderFloat("Blur Strength", &debug.blur_strength, 1.0f, 64.0f);
+        break;
+    case 5:
+        ImGui::SliderFloat("Sharpen Strength", &debug.sharpen_strength, 0.1f, 5.0f);
+        break;
+    case 6:
+        ImGui::SliderFloat("Aberration Offset", &debug.chromatic_offset, 0.001f, 0.02f);
+        break;
     }
 
     ImGui::Image(

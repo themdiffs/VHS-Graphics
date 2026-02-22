@@ -23,12 +23,14 @@ class Scene final : public batteries::Scene
     std::unique_ptr<ew::Shader> toon;
     std::unique_ptr<ew::Texture> texture;
     std::unique_ptr<ew::Texture> gradientTexture;
-    
+
     std::unique_ptr<ew::Shader> postprocess_none;
     std::unique_ptr<ew::Shader> postprocess_greyscale;
     std::unique_ptr<ew::Shader> postprocess_blur;
     std::unique_ptr<ew::Shader> postprocess_invert;
     std::unique_ptr<ew::Shader> postprocess_edgedetect;
+    std::unique_ptr<ew::Shader> postprocess_sharpen;
+    std::unique_ptr<ew::Shader> postprocess_chromatic;
 
     batteries::ambient_t ambient;
     batteries::light_t light;
