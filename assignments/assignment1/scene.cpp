@@ -67,6 +67,8 @@ static const char* effect_names[] = {
     "Chromatic Aberration",
     "Vignette",
     "Lens Distortion",
+    "Film Grain",
+    "Gamma Correction",
 };
 
 struct {
@@ -76,6 +78,8 @@ struct {
     float chromatic_offset = 0.005f;
     float vignette_intensity = 0.5f;
     float lens_strength = 0.5f;
+    float grain_strength = 0.15f;
+    float gamma = 2.2f;
 } debug;
 
 Scene::Scene()
@@ -94,6 +98,8 @@ Scene::Scene()
     postprocess_chromatic = std::make_unique<ew::Shader>("assets/shaders/fullscreen.vs", "assets/shaders/chromatic.fs");
     postprocess_vignette = std::make_unique<ew::Shader>("assets/shaders/fullscreen.vs", "assets/shaders/vignette.fs");
     postprocess_lensdistortion = std::make_unique<ew::Shader>("assets/shaders/fullscreen.vs", "assets/shaders/lensdistortion.fs");
+    postprocess_filmgrain = std::make_unique<ew::Shader>("assets/shaders/fullscreen.vs", "assets/shaders/filmgrain.fs");
+    postprocess_gammacorrection = std::make_unique<ew::Shader>("assets/shaders/fullscreen.vs", "assets/shaders/gammacorrection.fs");
 
     light = {
         .brightness = 1.0f,
@@ -241,6 +247,17 @@ void Scene::Render(void)
             postprocess_lensdistortion->setInt("screen", 0);
             postprocess_lensdistortion->setFloat("strength", debug.lens_strength);
             break;
+        case 9:
+            postprocess_filmgrain->use();
+            postprocess_filmgrain->setInt("screen", 0);
+            postprocess_filmgrain->setFloat("time", (float)time.absolute);
+            postprocess_filmgrain->setFloat("strength", debug.grain_strength);
+            break;
+        case 10:
+            postprocess_gammacorrection->use();
+            postprocess_gammacorrection->setInt("screen", 0);
+            postprocess_gammacorrection->setFloat("gamma", debug.gamma);
+            break;
         }
 
         glDisable(GL_DEPTH_TEST);
@@ -289,6 +306,7 @@ void Scene::Debug(void)
     ImGui::ColorEdit3("Color1", &palette.color1[0]);
     ImGui::ColorEdit3("Color2", &palette.color2[0]);
 
+    ImGui::SeparatorText("Post Processing");
     ImGui::Combo("Effect", &current_effect, effect_names, IM_ARRAYSIZE(effect_names));
 
     switch (current_effect)
@@ -308,8 +326,15 @@ void Scene::Debug(void)
     case 8:
         ImGui::SliderFloat("Distortion", &debug.lens_strength, 0.0f, 2.0f);
         break;
+    case 9:
+        ImGui::SliderFloat("Grain Strength", &debug.grain_strength, 0.0f, 0.5f);
+        break;
+    case 10:
+        ImGui::SliderFloat("Gamma", &debug.gamma, 0.5f, 4.0f);
+        break;
     }
 
+    ImGui::SeparatorText("Framebuffer");
     ImGui::Image(
         (void*)(intptr_t)fbo_texture,
         ImVec2(400, 300),

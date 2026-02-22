@@ -33,6 +33,8 @@ class Scene final : public batteries::Scene
     std::unique_ptr<ew::Shader> postprocess_chromatic;
     std::unique_ptr<ew::Shader> postprocess_vignette;
     std::unique_ptr<ew::Shader> postprocess_lensdistortion;
+    std::unique_ptr<ew::Shader> postprocess_filmgrain;
+    std::unique_ptr<ew::Shader> postprocess_gammacorrection;
 
     batteries::ambient_t ambient;
     batteries::light_t light;
@@ -45,6 +47,5 @@ class Scene final : public batteries::Scene
     {
         glm::vec3 color1;
         glm::vec3 color2;
-
     } palette;
 };
