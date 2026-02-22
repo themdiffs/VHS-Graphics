@@ -62,6 +62,7 @@ static const char* effect_names[] = {
     "Greyscale",
     "Blur",
     "Invert",
+    "Edge Detect",
 };
 
 struct {
@@ -82,6 +83,7 @@ Scene::Scene()
     postprocess_greyscale = std::make_unique<ew::Shader>("assets/shaders/fullscreen.vs", "assets/shaders/greyscale.fs");
     postprocess_blur = std::make_unique<ew::Shader>("assets/shaders/fullscreen.vs", "assets/shaders/blur.fs");
     postprocess_invert = std::make_unique<ew::Shader>("assets/shaders/fullscreen.vs", "assets/shaders/invert.fs");
+    postprocess_edgedetect = std::make_unique<ew::Shader>("assets/shaders/fullscreen.vs", "assets/shaders/edgedetect.fs");
 
     light = {
         .brightness = 1.0f,
@@ -95,7 +97,7 @@ Scene::Scene()
         .color1 = {1.0f, 0.0f, 1.0f},
         .color2 = {0.0f, 0.0f, 1.0f},
     };
-    
+
     fullscreen_quad.Initialize();
 
     glCreateFramebuffers(1, &fbo);
@@ -186,26 +188,29 @@ void Scene::Render(void)
 
     // post processing pipeline
     {
-        if (current_effect == 0)
+        switch (current_effect)
         {
+        case 0:
             postprocess_none->use();
             postprocess_none->setInt("screen", 0);
-        }
-        else if (current_effect == 1)
-        {
+            break;
+        case 1:
             postprocess_greyscale->use();
             postprocess_greyscale->setInt("screen", 0);
-        }
-        else if (current_effect == 2)
-        {
+            break;
+        case 2:
             postprocess_blur->use();
             postprocess_blur->setInt("screen", 0);
             postprocess_blur->setFloat("strength", debug.blur_strength);
-        }
-        else if (current_effect == 3)
-        {
+            break;
+        case 3:
             postprocess_invert->use();
             postprocess_invert->setInt("screen", 0);
+            break;
+        case 4:
+            postprocess_edgedetect->use();
+            postprocess_edgedetect->setInt("screen", 0);
+            break;
         }
 
         glDisable(GL_DEPTH_TEST);
