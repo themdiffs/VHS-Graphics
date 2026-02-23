@@ -30,11 +30,14 @@ const float kernel[9] = float[](
 
 void main()
 {
-  vec3 color = vec3(0.0);
+  vec3 sharpened = vec3(0.0);
   for (int i = 0; i < 9; i++)
   {
     vec3 local = vec3(texture(screen, vs_texcoord.xy + offsets[i]));
-    color += local * kernel[i] / strength;
+    sharpened += local * kernel[i];
   }
+
+  vec3 original = vec3(texture(screen, vs_texcoord));
+  vec3 color = mix(original, sharpened, strength);
   FragColor = vec4(color, 1.0);
 }

@@ -312,19 +312,19 @@ void Scene::Debug(void)
     switch (current_effect)
     {
     case 2:
-        ImGui::SliderFloat("Blur Strength", &debug.blur_strength, 1.0f, 64.0f);
+        ImGui::SliderFloat("Blur Strength", &debug.blur_strength, 0.0f, 10.0f);
         break;
     case 5:
         ImGui::SliderFloat("Sharpen Strength", &debug.sharpen_strength, 0.1f, 5.0f);
         break;
     case 6:
-        ImGui::SliderFloat("Aberration Offset", &debug.chromatic_offset, 0.001f, 0.02f);
+        ImGui::SliderFloat("Aberration Offset", &debug.chromatic_offset, -0.02f, 0.02f);
         break;
     case 7:
         ImGui::SliderFloat("Vignette Intensity", &debug.vignette_intensity, 0.0f, 1.5f);
         break;
     case 8:
-        ImGui::SliderFloat("Distortion", &debug.lens_strength, 0.0f, 2.0f);
+        ImGui::SliderFloat("Distortion", &debug.lens_strength, -5.0f, 5.0f);
         break;
     case 9:
         ImGui::SliderFloat("Grain Strength", &debug.grain_strength, 0.0f, 0.5f);
