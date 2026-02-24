@@ -23,7 +23,8 @@ out vec4 FragColor;
 in vec3 vs_position;
 in vec3 vs_normal;
 in vec2 vs_texcoord;
-in vec4 light_proj_post;
+in vec4 vs_light_proj_pos;
+
 
 uniform sampler2D texture0;
 uniform sampler2D shadowMap;
@@ -32,6 +33,17 @@ uniform Material material;
 uniform Light light;
 uniform Palette pal;
 uniform vec3 camera_position;
+
+float shadowCalculation(vec4 fragPosLightSpace) {
+  // map to 0..1
+  vec3 proj_coords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+
+  float closest = texture(shadowMap, proj_coords.xy).x;
+  float current = proj_coords.z;
+
+  float shadow = 0.25;
+  return shadow;
+}
 
 vec3 toonShading(vec3 normal, vec3 frag_pos, vec3 light_pos, vec3 light_color) {
   vec3 view_dir = normalize(camera_position - frag_pos);
@@ -51,10 +63,13 @@ void main()
 {
   vec3 normal = normalize(vs_normal);
 
+  float shadow = shadowCalculation(vs_light_proj_pos);
+
   vec3 object_color = texture(texture0, vs_texcoord).rgb;
   vec3 light_color = toonShading(normal, vs_position, light.position, light.color);
 
   vec3 final_color = object_color * (light_color + material.ambient);
+  final_color *= (1.0 - shadow);
 
-  FragColor = vec4(final_color, 1.0);
+  FragColor = vec4(light_color, 1.0);
 }

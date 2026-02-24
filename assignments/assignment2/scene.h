@@ -53,6 +53,8 @@ class Scene final : public batteries::Scene
     GLuint shadow_texture;
     GLuint shadow_depth;
 
+    ew::Mesh plane;
+
     struct
     {
         glm::vec3 color1;

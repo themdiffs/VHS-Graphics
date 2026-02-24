@@ -10,6 +10,7 @@
 #include "batteries/materials.h"
 #include "batteries/math.h"
 #include "batteries/opengl.h"
+#include "ew/procGen.h"
 
 struct FullScreenQuad
 {
@@ -104,7 +105,7 @@ struct
 Scene::Scene()
 {
     suzanne = std::make_unique<ew::Model>("assets/models/suzanne.obj");
-    toon = std::make_unique<ew::Shader>("assets/shaders/toon.vs", "assets/shaders/toon.fs");
+    toon = std::make_unique<ew::Shader>("assets/shaders/toon_shadowmap.vs", "assets/shaders/toon_shadowmap.fs");
     texture = std::make_unique<ew::Texture>("assets/ornament-color.jpg");
     gradientTexture = std::make_unique<ew::Texture>("assets/textures/ZAtoon.png");
 
@@ -139,6 +140,8 @@ Scene::Scene()
 
     CreateFrameBuffer();
     CreateDepthBuffer();
+
+    plane.load(ew::createPlane(100, 100, 1));
 }
 
 Scene::~Scene()
@@ -232,19 +235,29 @@ void Scene::Render(void)
     // render scene to framebuffer
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
     {
+        const auto light_proj = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 0.01f, 100.0f); // depends on light type. sun is ortho
+        const auto light_view = glm::lookAt(light.position, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        const auto light_view_proj = light_proj * light_view;
+
         glClearColor(backgroundColor.x, backgroundColor.y, backgroundColor.z, backgroundColor.w);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glBindTextureUnit(0, texture->getID());
         glBindTextureUnit(1, gradientTexture->getID());
 
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, shadow_depth);
+
         toon->use();
 
         toon->setInt("texture0", 0);
         toon->setInt("gradientTex", 1);
 
+        toon->setInt("shadowMap", 1);
+
         toon->setMat4("model", matrix);
         toon->setMat4("view_proj", view_proj);
+        toon->setMat4("vs_light_proj_pos", light_view_proj); // not sure what goes here
         toon->setVec3("camera_position", camera.position);
 
         toon->setVec3("light.position", light.position);
@@ -256,9 +269,12 @@ void Scene::Render(void)
 
         toon->setVec3("material.diffuse", glm::vec3(1));
         toon->setVec3("material.specular", glm::vec3(1));
-        toon->setVec3("material.ambient", glm::vec3(backgroundColor) * 0.5f);
+        // toon->setVec3("material.ambient", glm::vec3(backgroundColor) * 0.5f);
 
         suzanne->draw();
+        const auto plane_mat = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -2.0f, 0.0));
+        toon->setMat4("model", plane_mat);
+        plane.draw();
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -266,7 +282,9 @@ void Scene::Render(void)
     // render scene from light (world must exist)
     glBindFramebuffer(GL_FRAMEBUFFER, shadow_fbo);
     {
-        const auto light_view_proj = camera.Projection() * camera.View();
+        const auto light_proj = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 0.01f, 100.0f); // depends on light type. sun is ortho
+        const auto light_view = glm::lookAt(light.position, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        const auto light_view_proj = light_proj * light_view;
 
         // Creating the conditions we're rendering in
         glEnable(GL_CULL_FACE);
@@ -278,9 +296,8 @@ void Scene::Render(void)
         glClear(GL_DEPTH_BUFFER_BIT);
 
         depth->use();
-
         depth->setMat4("model", matrix);
-        depth->setMat4("light_view_proje", light_view_proj); // camera built in to this
+        depth->setMat4("light_view_proj", light_view_proj); // camera built in to this
 
         suzanne->draw();
     }
