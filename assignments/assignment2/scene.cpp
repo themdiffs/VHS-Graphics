@@ -100,6 +100,11 @@ struct
     float lens_strength = 0.5f;
     float grain_strength = 0.15f;
     float gamma = 2.2f;
+
+    glm::vec3 lightDirection = {-0.5f, -1.0f, -0.5f};
+    float min_bias = 0.005f;
+    float max_bias = 0.05f;
+    bool use_pcf = false;
 } debug;
 
 Scene::Scene()
@@ -129,8 +134,6 @@ Scene::Scene()
         .position = {0.0f, 2.0f, 0.0f},
     };
 
-    lightMatrix[3] = glm::vec4(light.position, 1.0f);
-
     palette = {
         .color1 = {1.0f, 0.0f, 1.0f},
         .color2 = {0.0f, 0.0f, 1.0f},
@@ -155,7 +158,6 @@ void Scene::CreateDepthBuffer()
     glCreateFramebuffers(1, &shadow_fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, shadow_fbo);
     {
-        // create depth texture
         glGenTextures(1, &shadow_depth);
         glBindTexture(GL_TEXTURE_2D, shadow_depth);
 
@@ -186,7 +188,6 @@ void Scene::CreateFrameBuffer()
     glCreateFramebuffers(1, &fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
     {
-        // color texture
         glGenTextures(1, &fbo_texture);
         glBindTexture(GL_TEXTURE_2D, fbo_texture);
 
@@ -196,7 +197,6 @@ void Scene::CreateFrameBuffer()
 
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fbo_texture, 0);
 
-        // create depth texture
         glGenTextures(1, &fbo_depth);
         glBindTexture(GL_TEXTURE_2D, fbo_depth);
 
@@ -220,6 +220,10 @@ void Scene::CreateFrameBuffer()
 void Scene::Update(float dt)
 {
     batteries::Scene::Update(dt);
+
+    glm::vec3 dir = glm::normalize(debug.lightDirection);
+    light.position = -dir * 10.0f;
+    lightMatrix[3] = glm::vec4(light.position, 1.0f);
 }
 
 auto matrix = glm::mat4(1.0f);
@@ -228,36 +232,59 @@ void Scene::Render(void)
 {
     const auto view_proj = camera.Projection() * camera.View();
 
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
-    glEnable(GL_DEPTH_TEST);
+    const auto light_proj = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 0.01f, 100.0f);
+    const auto light_view = glm::lookAt(light.position, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    const auto light_view_proj = light_proj * light_view;
+
+    // shadow pass
+    glBindFramebuffer(GL_FRAMEBUFFER, shadow_fbo);
+    {
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_FRONT);
+        glEnable(GL_DEPTH_TEST);
+
+        glViewport(0, 0, 800, 600);
+
+        glClear(GL_DEPTH_BUFFER_BIT);
+
+        depth->use();
+        depth->setMat4("model", matrix);
+        depth->setMat4("light_view_proj", light_view_proj);
+
+        suzanne->draw();
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     // render scene to framebuffer
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
     {
-        const auto light_proj = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 0.01f, 100.0f); // depends on light type. sun is ortho
-        const auto light_view = glm::lookAt(light.position, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-        const auto light_view_proj = light_proj * light_view;
-
         glClearColor(backgroundColor.x, backgroundColor.y, backgroundColor.z, backgroundColor.w);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glBindTextureUnit(0, texture->getID());
-        glBindTextureUnit(1, gradientTexture->getID());
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_BACK);
+        glEnable(GL_DEPTH_TEST);
+
+        glViewport(0, 0, 800, 600);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture->getID());
 
         glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, gradientTexture->getID());
+
+        glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, shadow_depth);
 
         toon->use();
 
         toon->setInt("texture0", 0);
         toon->setInt("gradientTex", 1);
-
-        toon->setInt("shadowMap", 1);
+        toon->setInt("shadowMap", 2);
 
         toon->setMat4("model", matrix);
         toon->setMat4("view_proj", view_proj);
-        toon->setMat4("vs_light_proj_pos", light_view_proj); // not sure what goes here
+        toon->setMat4("light_view_proj", light_view_proj);
         toon->setVec3("camera_position", camera.position);
 
         toon->setVec3("light.position", light.position);
@@ -269,39 +296,17 @@ void Scene::Render(void)
 
         toon->setVec3("material.diffuse", glm::vec3(1));
         toon->setVec3("material.specular", glm::vec3(1));
-        // toon->setVec3("material.ambient", glm::vec3(backgroundColor) * 0.5f);
+
+        toon->setFloat("min_bias", debug.min_bias);
+        toon->setFloat("max_bias", debug.max_bias);
+        toon->setInt("use_pcf", debug.use_pcf);
 
         suzanne->draw();
+
         const auto plane_mat = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -2.0f, 0.0));
         toon->setMat4("model", plane_mat);
         plane.draw();
     }
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    // shadow pipeline
-    // render scene from light (world must exist)
-    glBindFramebuffer(GL_FRAMEBUFFER, shadow_fbo);
-    {
-        const auto light_proj = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 0.01f, 100.0f); // depends on light type. sun is ortho
-        const auto light_view = glm::lookAt(light.position, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-        const auto light_view_proj = light_proj * light_view;
-
-        // Creating the conditions we're rendering in
-        glEnable(GL_CULL_FACE);
-        glCullFace(GL_BACK);
-        glEnable(GL_DEPTH_TEST);
-
-        glViewport(0, 0, 800, 600);
-
-        glClear(GL_DEPTH_BUFFER_BIT);
-
-        depth->use();
-        depth->setMat4("model", matrix);
-        depth->setMat4("light_view_proj", light_view_proj); // camera built in to this
-
-        suzanne->draw();
-    }
-
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     // post processing pipeline
@@ -383,17 +388,18 @@ void Scene::Debug(void)
     auto* view = glm::value_ptr(camera.View());
     auto* proj = glm::value_ptr(camera.Projection());
 
-    if (ImGuizmo::IsUsing())
-    {
-        light.position = glm::vec3(lightMatrix[3]);
-    }
-
     ImGuizmo::Manipulate(
         view,
         proj,
         ImGuizmo::TRANSLATE,
         ImGuizmo::WORLD,
         glm::value_ptr(lightMatrix));
+
+    if (ImGuizmo::IsUsing())
+    {
+        light.position = glm::vec3(lightMatrix[3]);
+        debug.lightDirection = -glm::normalize(light.position);
+    }
 
     cameracontroller.Debug();
 
@@ -402,9 +408,19 @@ void Scene::Debug(void)
     ImGui::Checkbox("Paused", &time.paused);
     ImGui::SliderFloat("Time Factor", &time.factor, 0.0f, 10.0f);
 
+    ImGui::SeparatorText("Light Direction");
+    ImGui::SliderFloat("Dir X", &debug.lightDirection.x, -1.0f, 1.0f);
+    ImGui::SliderFloat("Dir Y", &debug.lightDirection.y, -1.0f, 1.0f);
+    ImGui::SliderFloat("Dir Z", &debug.lightDirection.z, -1.0f, 1.0f);
     ImGui::ColorEdit3("Light Color", &light.color.x);
-    ImGui::SliderFloat("Shininess", &debug.shininess, 2.0f, 1024.0f);
 
+    ImGui::SeparatorText("Shadow Mapping");
+    ImGui::SliderFloat("Min Bias", &debug.min_bias, 0.0f, 0.01f);
+    ImGui::SliderFloat("Max Bias", &debug.max_bias, 0.0f, 0.1f);
+    ImGui::Checkbox("PCF", &debug.use_pcf);
+
+    ImGui::SeparatorText("Toon Shading");
+    ImGui::SliderFloat("Shininess", &debug.shininess, 2.0f, 1024.0f);
     ImGui::ColorEdit3("Color1", &palette.color1[0]);
     ImGui::ColorEdit3("Color2", &palette.color2[0]);
 
@@ -436,7 +452,7 @@ void Scene::Debug(void)
         break;
     }
 
-    ImGui::SeparatorText("Framebuffer");
+    ImGui::SeparatorText("Debug");
     ImGui::Image(
         (void*)(intptr_t)fbo_texture,
         ImVec2(400, 300),

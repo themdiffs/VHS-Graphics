@@ -25,7 +25,6 @@ in vec3 vs_normal;
 in vec2 vs_texcoord;
 in vec4 vs_light_proj_pos;
 
-
 uniform sampler2D texture0;
 uniform sampler2D shadowMap;
 uniform sampler2D gradientTex;
@@ -33,15 +32,45 @@ uniform Material material;
 uniform Light light;
 uniform Palette pal;
 uniform vec3 camera_position;
+uniform float min_bias;
+uniform float max_bias;
+uniform bool use_pcf;
 
-float shadowCalculation(vec4 fragPosLightSpace) {
-  // map to 0..1
+float shadowCalculation(vec4 fragPosLightSpace)
+{
   vec3 proj_coords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+  proj_coords = proj_coords * 0.5 + 0.5;
 
-  float closest = texture(shadowMap, proj_coords.xy).x;
-  float current = proj_coords.z;
+  if (proj_coords.z > 1.0)
+    return 0.0;
 
-  float shadow = 0.25;
+  float current_depth = proj_coords.z;
+
+  vec3 normal = normalize(vs_normal);
+  vec3 light_dir = normalize(light.position - vs_position);
+  float bias = max(max_bias * (1.0 - dot(normal, light_dir)), min_bias);
+
+  float shadow = 0.0;
+
+  if (use_pcf)
+  {
+    vec2 texel_size = 1.0 / vec2(textureSize(shadowMap, 0));
+    for (int x = -1; x <= 1; ++x)
+    {
+      for (int y = -1; y <= 1; ++y)
+      {
+        float pcf_depth = texture(shadowMap, proj_coords.xy + vec2(x, y) * texel_size).r;
+        shadow += (current_depth - bias) > pcf_depth ? 1.0 : 0.0;
+      }
+    }
+    shadow /= 9.0;
+  }
+  else
+  {
+    float closest_depth = texture(shadowMap, proj_coords.xy).r;
+    shadow = (current_depth - bias) > closest_depth ? 1.0 : 0.0;
+  }
+
   return shadow;
 }
 
@@ -65,11 +94,9 @@ void main()
 
   float shadow = shadowCalculation(vs_light_proj_pos);
 
-  vec3 object_color = texture(texture0, vs_texcoord).rgb;
   vec3 light_color = toonShading(normal, vs_position, light.position, light.color);
 
-  vec3 final_color = object_color * (light_color + material.ambient);
-  final_color *= (1.0 - shadow);
+  vec3 final_color = light_color * (1.0 - shadow);
 
-  FragColor = vec4(light_color, 1.0);
+  FragColor = vec4(final_color, 1.0);
 }
