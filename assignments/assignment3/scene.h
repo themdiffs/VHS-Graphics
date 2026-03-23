@@ -1,0 +1,69 @@
+#pragma once
+
+#include "batteries/lights.h"
+#include "batteries/opengl.h"
+#include "batteries/scene.h"
+
+#include "ew/model.h"
+#include "ew/shader.h"
+#include "ew/texture.h"
+
+class Scene final : public batteries::Scene
+{
+  public:
+    Scene();
+    virtual ~Scene();
+
+    void Update(float dt);
+    void Render(void);
+    void Debug(void);
+
+  private:
+    void CreateFrameBuffer();
+    void CreateDepthBuffer();
+    void CacheInstanceData();
+
+    std::vector<glm::mat4> modelInstances;
+
+    std::unique_ptr<ew::Model> suzanne;
+    std::unique_ptr<ew::Shader> toon;
+    std::unique_ptr<ew::Texture> texture;
+    std::unique_ptr<ew::Texture> gradientTexture;
+
+    std::unique_ptr<ew::Shader> depth;
+
+    std::unique_ptr<ew::Shader> postprocess_none;
+    std::unique_ptr<ew::Shader> postprocess_greyscale;
+    std::unique_ptr<ew::Shader> postprocess_blur;
+    std::unique_ptr<ew::Shader> postprocess_invert;
+    std::unique_ptr<ew::Shader> postprocess_edgedetect;
+    std::unique_ptr<ew::Shader> postprocess_sharpen;
+    std::unique_ptr<ew::Shader> postprocess_chromatic;
+    std::unique_ptr<ew::Shader> postprocess_vignette;
+    std::unique_ptr<ew::Shader> postprocess_lensdistortion;
+    std::unique_ptr<ew::Shader> postprocess_filmgrain;
+    std::unique_ptr<ew::Shader> postprocess_gammacorrection;
+
+    batteries::ambient_t ambient;
+    batteries::light_t light;
+
+    GLuint fbo;
+    GLuint fbo_texture;
+    GLuint fbo_depth;
+
+    // depth buffer
+    GLuint shadow_fbo;
+    GLuint shadow_texture;
+    GLuint shadow_depth;
+
+    ew::Mesh plane;
+
+    struct
+    {
+        glm::vec3 color1;
+        glm::vec3 color2;
+    } palette;
+
+    // instanced buffer
+    GLuint instanced_buffer;
+};
