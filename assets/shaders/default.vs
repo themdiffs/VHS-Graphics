@@ -1,4 +1,4 @@
-#version 300 es
+#version 410
 
 // attributes
 layout(location = 0) in vec3 in_position;

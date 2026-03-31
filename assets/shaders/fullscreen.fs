@@ -1,6 +1,5 @@
-#version 300 es
+#version 410
 precision mediump float;
-
 out vec4 FragColor;
 
 in vec2 vs_texcoord;
