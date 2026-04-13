@@ -2,7 +2,6 @@
 
 #include "batteries/scene.h"
 #include "batteries/lights.h"
-#include "batteries/opengl.h"
 
 #include "ew/model.h"
 #include "ew/shader.h"
@@ -24,28 +23,11 @@ class Scene final : public batteries::Scene
     std::unique_ptr<ew::Texture> texture;
     std::unique_ptr<ew::Texture> gradientTexture;
 
-    std::unique_ptr<ew::Shader> postprocess_none;
-    std::unique_ptr<ew::Shader> postprocess_greyscale;
-    std::unique_ptr<ew::Shader> postprocess_blur;
-    std::unique_ptr<ew::Shader> postprocess_invert;
-    std::unique_ptr<ew::Shader> postprocess_edgedetect;
-    std::unique_ptr<ew::Shader> postprocess_sharpen;
-    std::unique_ptr<ew::Shader> postprocess_chromatic;
-    std::unique_ptr<ew::Shader> postprocess_vignette;
-    std::unique_ptr<ew::Shader> postprocess_lensdistortion;
-    std::unique_ptr<ew::Shader> postprocess_filmgrain;
-    std::unique_ptr<ew::Shader> postprocess_gammacorrection;
-
     batteries::ambient_t ambient;
     batteries::light_t light;
 
-    GLuint fbo;
-    GLuint fbo_texture;
-    GLuint fbo_depth;
-
-    struct
-    {
-        glm::vec3 color1;
-        glm::vec3 color2;
+    struct {
+      glm::vec3 color1;
+      glm::vec3 color2;
     } palette;
 };

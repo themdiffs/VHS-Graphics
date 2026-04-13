@@ -1,4 +1,5 @@
-#version 410
+#version 300 es
+precision mediump float;
 
 struct Material {
   vec3 ambient;
@@ -22,10 +23,8 @@ out vec4 FragColor;
 in vec3 vs_position;
 in vec3 vs_normal;
 in vec2 vs_texcoord;
-in vec4 light_proj_post;
 
 uniform sampler2D texture0;
-uniform sampler2D shadowMap;
 uniform sampler2D gradientTex;
 uniform Material material;
 uniform Light light;
