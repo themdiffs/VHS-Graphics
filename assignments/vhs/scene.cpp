@@ -75,31 +75,9 @@ struct FullScreenQuad
 glm::mat4 lightMatrix = glm::mat4(1.0f);
 const glm::vec4 backgroundColor = glm::vec4(0.6f, 0.8f, 0.92f, 1.0f);
 
-static int current_effect = 0;
-static const char* effect_names[] = {
-    "None",
-    "Greyscale",
-    "Blur",
-    "Invert",
-    "Edge Detect",
-    "Sharpen",
-    "Chromatic Aberration",
-    "Vignette",
-    "Lens Distortion",
-    "Film Grain",
-    "Gamma Correction",
-};
-
 struct
 {
     float shininess = 128.0f;
-    float blur_strength = 16.0f;
-    float sharpen_strength = 1.0f;
-    float chromatic_offset = 0.005f;
-    float vignette_intensity = 0.5f;
-    float lens_strength = 0.5f;
-    float grain_strength = 0.15f;
-    float gamma = 2.2f;
 
     glm::vec3 lightDirection = {-0.5f, -1.0f, -0.5f};
     float min_bias = 0.005f;
@@ -108,9 +86,9 @@ struct
 
     // fog
     bool fog_enabled = true;
-    glm::vec3 fog_color = {0.6f, 0.8f, 0.92f};
-    float fog_near = 10.0f;
-    float fog_far = 80.0f;
+    glm::vec3 fog_color = {0.43f, 0.08f, 0.08f};
+    float fog_near = 5.0f;
+    float fog_far = 65.0f;
 } debug;
 
 Scene::Scene()
@@ -123,16 +101,7 @@ Scene::Scene()
     depth = std::make_unique<ew::Shader>("assets/shaders/depth.vs", "assets/shaders/depth.fs");
 
     postprocess_none = std::make_unique<ew::Shader>("assets/shaders/fullscreen.vs", "assets/shaders/fullscreen.fs");
-    postprocess_greyscale = std::make_unique<ew::Shader>("assets/shaders/fullscreen.vs", "assets/shaders/greyscale.fs");
-    postprocess_blur = std::make_unique<ew::Shader>("assets/shaders/fullscreen.vs", "assets/shaders/blur.fs");
-    postprocess_invert = std::make_unique<ew::Shader>("assets/shaders/fullscreen.vs", "assets/shaders/invert.fs");
-    postprocess_edgedetect = std::make_unique<ew::Shader>("assets/shaders/fullscreen.vs", "assets/shaders/edgedetect.fs");
-    postprocess_sharpen = std::make_unique<ew::Shader>("assets/shaders/fullscreen.vs", "assets/shaders/sharpen.fs");
-    postprocess_chromatic = std::make_unique<ew::Shader>("assets/shaders/fullscreen.vs", "assets/shaders/chromatic.fs");
-    postprocess_vignette = std::make_unique<ew::Shader>("assets/shaders/fullscreen.vs", "assets/shaders/vignette.fs");
-    postprocess_lensdistortion = std::make_unique<ew::Shader>("assets/shaders/fullscreen.vs", "assets/shaders/lensdistortion.fs");
-    postprocess_filmgrain = std::make_unique<ew::Shader>("assets/shaders/fullscreen.vs", "assets/shaders/filmgrain.fs");
-    postprocess_gammacorrection = std::make_unique<ew::Shader>("assets/shaders/fullscreen.vs", "assets/shaders/gammacorrection.fs");
+postprocess_crt = std::make_unique<ew::Shader>("assets/shaders/fullscreen.vs", "assets/shaders/crt.fs");
 
     light = {
         .brightness = 1.0f,
@@ -226,6 +195,8 @@ void Scene::CreateFrameBuffer()
 void Scene::Update(float dt)
 {
     batteries::Scene::Update(dt);
+    // this is fo the noise
+    total_time += dt;
 
     glm::vec3 dir = glm::normalize(debug.lightDirection);
     light.position = -dir * 20.0f;
@@ -353,65 +324,37 @@ void Scene::Render(void)
 
     // post processing pipeline
     {
-        switch (current_effect)
-        {
-        case 0:
-            postprocess_none->use();
-            postprocess_none->setInt("screen", 0);
-            break;
-        case 1:
-            postprocess_greyscale->use();
-            postprocess_greyscale->setInt("screen", 0);
-            break;
-        case 2:
-            postprocess_blur->use();
-            postprocess_blur->setInt("screen", 0);
-            postprocess_blur->setFloat("strength", debug.blur_strength);
-            break;
-        case 3:
-            postprocess_invert->use();
-            postprocess_invert->setInt("screen", 0);
-            break;
-        case 4:
-            postprocess_edgedetect->use();
-            postprocess_edgedetect->setInt("screen", 0);
-            break;
-        case 5:
-            postprocess_sharpen->use();
-            postprocess_sharpen->setInt("screen", 0);
-            postprocess_sharpen->setFloat("strength", debug.sharpen_strength);
-            break;
-        case 6:
-            postprocess_chromatic->use();
-            postprocess_chromatic->setInt("screen", 0);
-            postprocess_chromatic->setFloat("offset", debug.chromatic_offset);
-            break;
-        case 7:
-            postprocess_vignette->use();
-            postprocess_vignette->setInt("screen", 0);
-            postprocess_vignette->setFloat("intensity", debug.vignette_intensity);
-            break;
-        case 8:
-            postprocess_lensdistortion->use();
-            postprocess_lensdistortion->setInt("screen", 0);
-            postprocess_lensdistortion->setFloat("strength", debug.lens_strength);
-            break;
-        case 9:
-            postprocess_filmgrain->use();
-            postprocess_filmgrain->setInt("screen", 0);
-            postprocess_filmgrain->setFloat("time", (float)time.absolute);
-            postprocess_filmgrain->setFloat("strength", debug.grain_strength);
-            break;
-        case 10:
-            postprocess_gammacorrection->use();
-            postprocess_gammacorrection->setInt("screen", 0);
-            postprocess_gammacorrection->setFloat("gamma", debug.gamma);
-            break;
-        }
-
         glDisable(GL_DEPTH_TEST);
         glClearColor(1.0f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        // haha it says pp
+        ew::Shader* pp;
+
+        if (crt.enabled)
+        {
+            pp = postprocess_crt.get();
+        }
+        else
+        {
+            pp = postprocess_none.get();
+        }
+
+        // haha youre using pp
+        pp->use();
+        pp->setInt("screen", 0);
+
+        if (crt.enabled)
+        {
+            pp->setFloat("u_curvature", crt.curvature);
+            pp->setFloat("u_scanline_intensity", crt.scanline_intensity);
+            pp->setFloat("u_scanline_count", crt.scanline_count);
+            pp->setFloat("u_vignette_strength", crt.vignette_strength);
+            pp->setFloat("u_brightness", crt.brightness);
+            pp->setFloat("u_chromatic_aberration", crt.chromatic_aberration);
+            pp->setFloat("u_noise_strength", crt.noise_strength);
+            pp->setFloat("u_time", total_time);
+        }
 
         glBindVertexArray(fullscreen_quad.vao);
         glActiveTexture(GL_TEXTURE0);
@@ -459,13 +402,6 @@ void Scene::Debug(void)
         ImGui::Checkbox("PCF", &debug.use_pcf);
     }
 
-    if (ImGui::CollapsingHeader("Toon Shading"))
-    {
-        ImGui::SliderFloat("Shininess", &debug.shininess, 2.0f, 1024.0f);
-        ImGui::ColorEdit3("Color1", &palette.color1[0]);
-        ImGui::ColorEdit3("Color2", &palette.color2[0]);
-    }
-
     if (ImGui::CollapsingHeader("Fog"))
     {
         ImGui::Checkbox("Enabled", &debug.fog_enabled);
@@ -474,35 +410,21 @@ void Scene::Debug(void)
         ImGui::SliderFloat("Fog Far", &debug.fog_far, 0.0f, 200.0f);
     }
 
-    if (ImGui::CollapsingHeader("Post Processing"))
-    {
-        ImGui::Combo("Effect", &current_effect, effect_names, IM_ARRAYSIZE(effect_names));
+    if (ImGui::CollapsingHeader("CRT Shader"))
+{
+    ImGui::Checkbox("Enabled", &crt.enabled);
 
-        switch (current_effect)
-        {
-        case 2:
-            ImGui::SliderFloat("Blur Strength", &debug.blur_strength, 0.0f, 10.0f);
-            break;
-        case 5:
-            ImGui::SliderFloat("Sharpen Strength", &debug.sharpen_strength, 0.1f, 5.0f);
-            break;
-        case 6:
-            ImGui::SliderFloat("Aberration Offset", &debug.chromatic_offset, -0.02f, 0.02f);
-            break;
-        case 7:
-            ImGui::SliderFloat("Vignette Intensity", &debug.vignette_intensity, 0.0f, 1.5f);
-            break;
-        case 8:
-            ImGui::SliderFloat("Distortion", &debug.lens_strength, -5.0f, 5.0f);
-            break;
-        case 9:
-            ImGui::SliderFloat("Grain Strength", &debug.grain_strength, 0.0f, 0.5f);
-            break;
-        case 10:
-            ImGui::SliderFloat("Gamma", &debug.gamma, 0.5f, 4.0f);
-            break;
-        }
+    if (crt.enabled)
+    {
+        ImGui::SliderFloat("Curvature", &crt.curvature, 0.0f, 10.0f);
+        ImGui::SliderFloat("Scanline Intensity", &crt.scanline_intensity, 0.0f, 1.0f);
+        ImGui::SliderFloat("Scanline Count", &crt.scanline_count, 50.0f, 800.0f);
+        ImGui::SliderFloat("Vignette", &crt.vignette_strength, 0.0f, 1.0f);
+        ImGui::SliderFloat("Brightness", &crt.brightness, 0.5f, 2.0f);
+        ImGui::SliderFloat("Chromatic Aberration", &crt.chromatic_aberration, 0.0f, 5.0f);
+        ImGui::SliderFloat("Film Grain", &crt.noise_strength, 0.0f, 0.3f);
     }
+}
 
     ImGui::End();
 }

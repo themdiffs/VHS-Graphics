@@ -30,16 +30,7 @@ class Scene final : public batteries::Scene
     std::unique_ptr<ew::Shader> depth;
 
     std::unique_ptr<ew::Shader> postprocess_none;
-    std::unique_ptr<ew::Shader> postprocess_greyscale;
-    std::unique_ptr<ew::Shader> postprocess_blur;
-    std::unique_ptr<ew::Shader> postprocess_invert;
-    std::unique_ptr<ew::Shader> postprocess_edgedetect;
-    std::unique_ptr<ew::Shader> postprocess_sharpen;
-    std::unique_ptr<ew::Shader> postprocess_chromatic;
-    std::unique_ptr<ew::Shader> postprocess_vignette;
-    std::unique_ptr<ew::Shader> postprocess_lensdistortion;
-    std::unique_ptr<ew::Shader> postprocess_filmgrain;
-    std::unique_ptr<ew::Shader> postprocess_gammacorrection;
+    std::unique_ptr<ew::Shader> postprocess_crt;
 
     batteries::ambient_t ambient;
     batteries::light_t light;
@@ -60,4 +51,19 @@ class Scene final : public batteries::Scene
         glm::vec3 color1;
         glm::vec3 color2;
     } palette;
+
+    // crt setting s stuff
+    struct CRTSettings
+    {
+        bool enabled = true;
+        float curvature = 2.0f;
+        float scanline_intensity = 0.1f;
+        float scanline_count = 300.0f;
+        float vignette_strength = 0.3f;
+        float brightness = 1.0f;
+        float chromatic_aberration = 1.5f;
+        float noise_strength = 0.08f;
+    } crt;
+
+    float total_time = 0.0f;
 };
