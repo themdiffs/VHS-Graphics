@@ -95,10 +95,12 @@ void main()
   vec3 view_dir = normalize(camera_position - vs_position);
   vec3 halfway_dir = normalize(light_dir + view_dir);
 
-  vec3 ambient = 0.1 * material.diffuse;
+  vec3 texColor = texture(texture0, vs_texcoord).rgb;
+
+  vec3 ambient = 0.1 * texColor;
 
   float diff = max(dot(normal, light_dir), 0.0);
-  vec3 diffuse = diff * light.color * material.diffuse;
+  vec3 diffuse = diff * light.color * texColor;
 
   float spec = pow(max(dot(normal, halfway_dir), 0.0), material.shininess);
   vec3 specular = spec * light.color * material.specular;
