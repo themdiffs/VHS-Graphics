@@ -284,6 +284,9 @@ void Scene::Render(void)
         toon->setVec3("fog.color", debug.fog_color);
         toon->setFloat("fog.near", debug.fog_near);
         toon->setFloat("fog.far", debug.fog_far);
+        
+        toon->setVec3("light_position", light.position);
+        toon->setVec3("light_color", light.color);
 
         suzanne->draw();
 
