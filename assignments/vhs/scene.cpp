@@ -96,6 +96,7 @@ Scene::Scene()
     suzanne = std::make_unique<ew::Model>("assets/models/suzanne.obj");
     toon = std::make_unique<ew::Shader>("assets/shaders/default_shadowmap_instance.vs", "assets/shaders/default_shadowmap_instance.fs");
     texture = std::make_unique<ew::Texture>("assets/ornament-color.jpg");
+    brickTexture = std::make_unique<ew::Texture>("assets/brick_color.jpg");
     gradientTexture = std::make_unique<ew::Texture>("assets/textures/ZAtoon.png");
 
     depth = std::make_unique<ew::Shader>("assets/shaders/depth.vs", "assets/shaders/depth.fs");
@@ -245,7 +246,7 @@ void Scene::Render(void)
         glViewport(0, 0, 800, 600);
 
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texture->getID());
+        glBindTexture(GL_TEXTURE_2D, brickTexture->getID());
 
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, gradientTexture->getID());
@@ -263,6 +264,7 @@ void Scene::Render(void)
         toon->setMat4("view_proj", view_proj);
         toon->setMat4("light_view_proj", light_view_proj);
         toon->setVec3("camera_position", camera.position);
+        toon->setFloat("snap_resolution", vertexSettings.snap_resolution);
 
         toon->setVec3("light.position", light.position);
         toon->setVec3("light.color", light.color);
@@ -423,6 +425,15 @@ void Scene::Debug(void)
         ImGui::SliderFloat("Brightness", &crt.brightness, 0.5f, 2.0f);
         ImGui::SliderFloat("Chromatic Aberration", &crt.chromatic_aberration, 0.0f, 5.0f);
         ImGui::SliderFloat("Film Grain", &crt.noise_strength, 0.0f, 0.3f);
+    }
+
+    if (ImGui::CollapsingHeader("Vertex Snapping"))
+    {
+        ImGui::Checkbox("Enabled", &vertexSettings.enabled);
+
+        if(vertexSettings.enabled){
+            ImGui::SliderFloat("Vertex Resolution", &vertexSettings.snap_resolution, 0.0f, 100.0f);
+        }
     }
 }
 

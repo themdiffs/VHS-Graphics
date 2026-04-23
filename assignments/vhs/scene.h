@@ -25,6 +25,7 @@ class Scene final : public batteries::Scene
     std::unique_ptr<ew::Model> suzanne;
     std::unique_ptr<ew::Shader> toon;
     std::unique_ptr<ew::Texture> texture;
+    std::unique_ptr<ew::Texture> brickTexture;
     std::unique_ptr<ew::Texture> gradientTexture;
 
     std::unique_ptr<ew::Shader> depth;
@@ -64,6 +65,11 @@ class Scene final : public batteries::Scene
         float chromatic_aberration = 1.5f;
         float noise_strength = 0.08f;
     } crt;
+
+    struct VertexSnapSettings{
+      bool enabled = true;
+      float snap_resolution = 75;
+    } vertexSettings;
 
     float total_time = 0.0f;
 };
