@@ -104,13 +104,19 @@ struct
     glm::vec3 lightDirection = {-0.5f, -1.0f, -0.5f};
     float min_bias = 0.005f;
     float max_bias = 0.05f;
-    bool use_pcf = false;
+    bool use_pcf = true;
+
+    // fog
+    bool fog_enabled = true;
+    glm::vec3 fog_color = {0.6f, 0.8f, 0.92f};
+    float fog_near = 10.0f;
+    float fog_far = 80.0f;
 } debug;
 
 Scene::Scene()
 {
     suzanne = std::make_unique<ew::Model>("assets/models/suzanne.obj");
-    toon = std::make_unique<ew::Shader>("assets/shaders/toon_shadowmap.vs", "assets/shaders/toon_shadowmap.fs");
+    toon = std::make_unique<ew::Shader>("assets/shaders/default_shadowmap_instance.vs", "assets/shaders/default_shadowmap_instance.fs");
     texture = std::make_unique<ew::Texture>("assets/ornament-color.jpg");
     gradientTexture = std::make_unique<ew::Texture>("assets/textures/ZAtoon.png");
 
@@ -222,7 +228,7 @@ void Scene::Update(float dt)
     batteries::Scene::Update(dt);
 
     glm::vec3 dir = glm::normalize(debug.lightDirection);
-    light.position = -dir * 10.0f;
+    light.position = -dir * 20.0f;
     lightMatrix[3] = glm::vec4(light.position, 1.0f);
 }
 
@@ -233,7 +239,7 @@ void Scene::Render(void)
     const auto view_proj = camera.Projection() * camera.View();
 
     const auto light_proj = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 0.01f, 100.0f);
-    const auto light_view = glm::lookAt(light.position, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    const auto light_view = glm::lookAt(light.position, glm::vec3(0.0f), glm::vec3(0.0f, 10.0f, 0.0f));
     const auto light_view_proj = light_proj * light_view;
 
     // shadow pass
@@ -301,10 +307,46 @@ void Scene::Render(void)
         toon->setFloat("max_bias", debug.max_bias);
         toon->setInt("use_pcf", debug.use_pcf);
 
+        toon->setInt("fog.enabled", debug.fog_enabled);
+        toon->setVec3("fog.color", debug.fog_color);
+        toon->setFloat("fog.near", debug.fog_near);
+        toon->setFloat("fog.far", debug.fog_far);
+
         suzanne->draw();
 
-        const auto plane_mat = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -2.0f, 0.0));
-        toon->setMat4("model", plane_mat);
+        // bottom
+        const auto plane_bottom = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -2.0f, 0.0f));
+        toon->setMat4("model", plane_bottom);
+        plane.draw();
+
+        // top
+        const auto plane_top = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 98.0f, 0.0f))
+            * glm::rotate(glm::mat4(1.0f), glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        toon->setMat4("model", plane_top);
+        plane.draw();
+
+        // front
+        const auto plane_front = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 48.0f, 50.0f))
+            * glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        toon->setMat4("model", plane_front);
+        plane.draw();
+
+        // back
+        const auto plane_back = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 48.0f, -50.0f))
+            * glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        toon->setMat4("model", plane_back);
+        plane.draw();
+
+        // right
+        const auto plane_right = glm::translate(glm::mat4(1.0f), glm::vec3(50.0f, 48.0f, 0.0f))
+            * glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        toon->setMat4("model", plane_right);
+        plane.draw();
+
+        // left
+        const auto plane_left = glm::translate(glm::mat4(1.0f), glm::vec3(-50.0f, 48.0f, 0.0f))
+            * glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        toon->setMat4("model", plane_left);
         plane.draw();
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -384,7 +426,6 @@ void Scene::Debug(void)
     ImGuizmo::SetDrawlist(ImGui::GetBackgroundDrawList());
     ImGuizmo::SetRect(0, 0, ImGui::GetIO().DisplaySize.x, ImGui::GetIO().DisplaySize.y);
 
-    glm::mat4 m{1.0f};
     auto* view = glm::value_ptr(camera.View());
     auto* proj = glm::value_ptr(camera.Projection());
 
@@ -401,70 +442,67 @@ void Scene::Debug(void)
         debug.lightDirection = -glm::normalize(light.position);
     }
 
-    cameracontroller.Debug();
-
     ImGui::Begin("Controls", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
 
-    ImGui::Checkbox("Paused", &time.paused);
-    ImGui::SliderFloat("Time Factor", &time.factor, 0.0f, 10.0f);
-
-    ImGui::SeparatorText("Light Direction");
-    ImGui::SliderFloat("Dir X", &debug.lightDirection.x, -1.0f, 1.0f);
-    ImGui::SliderFloat("Dir Y", &debug.lightDirection.y, -1.0f, 1.0f);
-    ImGui::SliderFloat("Dir Z", &debug.lightDirection.z, -1.0f, 1.0f);
-    ImGui::ColorEdit3("Light Color", &light.color.x);
-
-    ImGui::SeparatorText("Shadow Mapping");
-    ImGui::SliderFloat("Min Bias", &debug.min_bias, 0.0f, 0.01f);
-    ImGui::SliderFloat("Max Bias", &debug.max_bias, 0.0f, 0.1f);
-    ImGui::Checkbox("PCF", &debug.use_pcf);
-
-    ImGui::SeparatorText("Toon Shading");
-    ImGui::SliderFloat("Shininess", &debug.shininess, 2.0f, 1024.0f);
-    ImGui::ColorEdit3("Color1", &palette.color1[0]);
-    ImGui::ColorEdit3("Color2", &palette.color2[0]);
-
-    ImGui::SeparatorText("Post Processing");
-    ImGui::Combo("Effect", &current_effect, effect_names, IM_ARRAYSIZE(effect_names));
-
-    switch (current_effect)
+    if (ImGui::CollapsingHeader("Light Direction"))
     {
-    case 2:
-        ImGui::SliderFloat("Blur Strength", &debug.blur_strength, 0.0f, 10.0f);
-        break;
-    case 5:
-        ImGui::SliderFloat("Sharpen Strength", &debug.sharpen_strength, 0.1f, 5.0f);
-        break;
-    case 6:
-        ImGui::SliderFloat("Aberration Offset", &debug.chromatic_offset, -0.02f, 0.02f);
-        break;
-    case 7:
-        ImGui::SliderFloat("Vignette Intensity", &debug.vignette_intensity, 0.0f, 1.5f);
-        break;
-    case 8:
-        ImGui::SliderFloat("Distortion", &debug.lens_strength, -5.0f, 5.0f);
-        break;
-    case 9:
-        ImGui::SliderFloat("Grain Strength", &debug.grain_strength, 0.0f, 0.5f);
-        break;
-    case 10:
-        ImGui::SliderFloat("Gamma", &debug.gamma, 0.5f, 4.0f);
-        break;
+        ImGui::SliderFloat("Dir X", &debug.lightDirection.x, -1.0f, 1.0f);
+        ImGui::SliderFloat("Dir Y", &debug.lightDirection.y, -1.0f, 1.0f);
+        ImGui::SliderFloat("Dir Z", &debug.lightDirection.z, -1.0f, 1.0f);
+        ImGui::ColorEdit3("Light Color", &light.color.x);
     }
 
-    ImGui::SeparatorText("Debug");
-    ImGui::Image(
-        (void*)(intptr_t)fbo_texture,
-        ImVec2(400, 300),
-        ImVec2(0, 1), ImVec2(1, 0));
-    ImGui::Image(
-        (void*)(intptr_t)fbo_depth,
-        ImVec2(400, 300),
-        ImVec2(0, 1), ImVec2(1, 0));
-    ImGui::Image(
-        (void*)(intptr_t)shadow_depth,
-        ImVec2(400, 300),
-        ImVec2(0, 1), ImVec2(1, 0));
+    if (ImGui::CollapsingHeader("Shadow Mapping"))
+    {
+        ImGui::SliderFloat("Min Bias", &debug.min_bias, 0.0f, 0.01f);
+        ImGui::SliderFloat("Max Bias", &debug.max_bias, 0.0f, 0.1f);
+        ImGui::Checkbox("PCF", &debug.use_pcf);
+    }
+
+    if (ImGui::CollapsingHeader("Toon Shading"))
+    {
+        ImGui::SliderFloat("Shininess", &debug.shininess, 2.0f, 1024.0f);
+        ImGui::ColorEdit3("Color1", &palette.color1[0]);
+        ImGui::ColorEdit3("Color2", &palette.color2[0]);
+    }
+
+    if (ImGui::CollapsingHeader("Fog"))
+    {
+        ImGui::Checkbox("Enabled", &debug.fog_enabled);
+        ImGui::ColorEdit3("Fog Color", &debug.fog_color[0]);
+        ImGui::SliderFloat("Fog Near", &debug.fog_near, 0.0f, 100.0f);
+        ImGui::SliderFloat("Fog Far", &debug.fog_far, 0.0f, 200.0f);
+    }
+
+    if (ImGui::CollapsingHeader("Post Processing"))
+    {
+        ImGui::Combo("Effect", &current_effect, effect_names, IM_ARRAYSIZE(effect_names));
+
+        switch (current_effect)
+        {
+        case 2:
+            ImGui::SliderFloat("Blur Strength", &debug.blur_strength, 0.0f, 10.0f);
+            break;
+        case 5:
+            ImGui::SliderFloat("Sharpen Strength", &debug.sharpen_strength, 0.1f, 5.0f);
+            break;
+        case 6:
+            ImGui::SliderFloat("Aberration Offset", &debug.chromatic_offset, -0.02f, 0.02f);
+            break;
+        case 7:
+            ImGui::SliderFloat("Vignette Intensity", &debug.vignette_intensity, 0.0f, 1.5f);
+            break;
+        case 8:
+            ImGui::SliderFloat("Distortion", &debug.lens_strength, -5.0f, 5.0f);
+            break;
+        case 9:
+            ImGui::SliderFloat("Grain Strength", &debug.grain_strength, 0.0f, 0.5f);
+            break;
+        case 10:
+            ImGui::SliderFloat("Gamma", &debug.gamma, 0.5f, 4.0f);
+            break;
+        }
+    }
 
     ImGui::End();
 }

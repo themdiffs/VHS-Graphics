@@ -18,6 +18,16 @@ struct Palette {
   vec3 color2;
 };
 
+struct Fog {
+  vec3 color;
+  
+  float near;
+  float far;
+  float density;
+
+  bool enabled;
+};
+
 out vec4 FragColor;
 
 in vec3 vs_position;
@@ -31,6 +41,7 @@ uniform sampler2D gradientTex;
 uniform Material material;
 uniform Light light;
 uniform Palette pal;
+uniform Fog fog;
 uniform vec3 camera_position;
 uniform float min_bias;
 uniform float max_bias;
@@ -74,29 +85,32 @@ float shadowCalculation(vec4 fragPosLightSpace)
   return shadow;
 }
 
-vec3 toonShading(vec3 normal, vec3 frag_pos, vec3 light_pos, vec3 light_color) {
-  vec3 view_dir = normalize(camera_position - frag_pos);
-  vec3 light_dir = normalize(light_pos - frag_pos);
-  vec3 halfway_dir = normalize(light_dir + view_dir);
-
-  float ndotl = (dot(normal, light_dir) + 1.0) * 0.5;
-  float ndoth = max(dot(normal, halfway_dir), 0.0);
-
-  vec3 gradient = texture(gradientTex, vec2(ndotl, 0.5)).rgb;
-  vec3 toon_color = mix(pal.color2, pal.color1, gradient);
-
-  return toon_color;
-}
-
 void main()
 {
   vec3 normal = normalize(vs_normal);
 
   float shadow = shadowCalculation(vs_light_proj_pos);
 
-  vec3 light_color = toonShading(normal, vs_position, light.position, light.color);
+  vec3 light_dir = normalize(light.position - vs_position);
+  vec3 view_dir = normalize(camera_position - vs_position);
+  vec3 halfway_dir = normalize(light_dir + view_dir);
 
-  vec3 final_color = light_color * (1.0 - shadow);
+  vec3 ambient = 0.1 * material.diffuse;
 
-  FragColor = vec4(final_color, 1.0);
+  float diff = max(dot(normal, light_dir), 0.0);
+  vec3 diffuse = diff * light.color * material.diffuse;
+
+  float spec = pow(max(dot(normal, halfway_dir), 0.0), material.shininess);
+  vec3 specular = spec * light.color * material.specular;
+
+  vec3 lighting = ambient + (1.0 - shadow) * (diffuse + specular);
+
+  if (fog.enabled)
+  {
+    float dist = length(camera_position - vs_position);
+    float fog_factor = clamp((fog.far - dist) / (fog.far - fog.near), 0.0, 1.0);
+    lighting = mix(fog.color, lighting, fog_factor);
+  }
+
+  FragColor = vec4(lighting, 1.0);
 }
