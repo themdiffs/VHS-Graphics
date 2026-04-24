@@ -41,9 +41,14 @@ class Scene final : public batteries::Scene
     GLuint fbo_depth;
 
     // depth buffer
-    GLuint shadow_fbo;
-    GLuint shadow_texture;
-    GLuint shadow_depth;
+    // GLuint shadow_fbo;
+    // GLuint shadow_texture;
+    // GLuint shadow_depth;
+    static const int NUM_CASCADES = 3;
+    GLuint shadow_fbo[NUM_CASCADES];
+    GLuint shadow_depth[NUM_CASCADES];
+    glm::mat4 cascade_light_view_proj[NUM_CASCADES];
+    float cascade_splits[NUM_CASCADES];
 
     ew::Mesh plane;
 

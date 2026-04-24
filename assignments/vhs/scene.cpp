@@ -12,6 +12,8 @@
 #include "batteries/opengl.h"
 #include "ew/procGen.h"
 
+#include <algorithm>
+
 struct FullScreenQuad
 {
     GLuint vao;
@@ -83,6 +85,9 @@ struct
     float min_bias = 0.005f;
     float max_bias = 0.05f;
     bool use_pcf = true;
+    bool use_gouraud = true;
+    bool show_cascades = false;
+    bool use_cascades = true;
 
     // fog
     bool fog_enabled = true;
@@ -121,42 +126,49 @@ postprocess_crt = std::make_unique<ew::Shader>("assets/shaders/fullscreen.vs", "
     CreateDepthBuffer();
 
     plane.load(ew::createPlane(100, 100, 1));
+
+    cascade_splits[0] = 8.0f;
+    cascade_splits[1] = 25.0f;
+    cascade_splits[2] = 60.0f;
 }
 
 Scene::~Scene()
 {
     glDeleteFramebuffers(1, &fbo);
-    glDeleteFramebuffers(1, &shadow_fbo);
+    glDeleteFramebuffers(NUM_CASCADES, shadow_fbo);
 }
 
 void Scene::CreateDepthBuffer()
 {
-    glCreateFramebuffers(1, &shadow_fbo);
-    glBindFramebuffer(GL_FRAMEBUFFER, shadow_fbo);
+    for (int i = 0; i < NUM_CASCADES; i++)
     {
-        glGenTextures(1, &shadow_depth);
-        glBindTexture(GL_TEXTURE_2D, shadow_depth);
+        glCreateFramebuffers(1, &shadow_fbo[i]);
+        glBindFramebuffer(GL_FRAMEBUFFER, shadow_fbo[i]);
+        {
+            glGenTextures(1, &shadow_depth[i]);
+            glBindTexture(GL_TEXTURE_2D, shadow_depth[i]);
 
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, 800, 600, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, NULL);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, 800, 600, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, NULL);
 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadow_depth, 0);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadow_depth[i], 0);
 
-        glDrawBuffers(0, nullptr);
-        glReadBuffer(GL_NONE);
+            glDrawBuffers(0, nullptr);
+            glReadBuffer(GL_NONE);
+        }
+
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        {
+            printf("Depthbuffer %d not complete!\n", i);
+        }
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
-
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-    {
-        printf("Depthbuffer not complete!\n");
-    }
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void Scene::CreateFrameBuffer()
@@ -206,32 +218,123 @@ void Scene::Update(float dt)
 
 auto matrix = glm::mat4(1.0f);
 
+static glm::mat4 computeCascadeLightViewProj(
+    float nearDist,
+    float farDist,
+    const glm::mat4& camProj,
+    const glm::mat4& camView,
+    const glm::vec3& lightDir)
+{
+    glm::mat4 subProj = camProj;
+    subProj[2][2] = -(farDist + nearDist) / (farDist - nearDist);
+    subProj[3][2] = -2.0f * farDist * nearDist / (farDist - nearDist);
+
+    const glm::mat4 inv = glm::inverse(subProj * camView);
+
+    glm::vec3 corners[8];
+    int idx = 0;
+    for (int x = 0; x < 2; x++)
+        for (int y = 0; y < 2; y++)
+            for (int z = 0; z < 2; z++)
+            {
+                glm::vec4 pt = inv * glm::vec4(2.0f*x-1.0f, 2.0f*y-1.0f, 2.0f*z-1.0f, 1.0f);
+                corners[idx++] = glm::vec3(pt) / pt.w;
+            }
+
+    glm::vec3 center(0.0f);
+    for (auto& c : corners) center += c;
+    center /= 8.0f;
+
+    glm::vec3 up = glm::abs(lightDir.y) < 0.99f ? glm::vec3(0, 1, 0) : glm::vec3(1, 0, 0);
+    const glm::mat4 lightView = glm::lookAt(center - lightDir * 20.0f, center, up);
+
+    float minX = corners[0].x, maxX = corners[0].x;
+    float minY = corners[0].y, maxY = corners[0].y;
+    float minZ = corners[0].z, maxZ = corners[0].z;
+
+    for (auto& c : corners)
+    {
+        glm::vec4 lc = lightView * glm::vec4(c, 1.0f);
+        minX = std::min(minX, lc.x); maxX = std::max(maxX, lc.x);
+        minY = std::min(minY, lc.y); maxY = std::max(maxY, lc.y);
+        minZ = std::min(minZ, lc.z); maxZ = std::max(maxZ, lc.z);
+    }
+
+    minZ -= 10.0f;
+    maxZ += 10.0f;
+
+    const glm::mat4 lightProj = glm::ortho(minX, maxX, minY, maxY, minZ, maxZ);
+    return lightProj * lightView;
+}
+
 void Scene::Render(void)
 {
     const auto view_proj = camera.Projection() * camera.View();
 
-    const auto light_proj = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 0.01f, 100.0f);
-    const auto light_view = glm::lookAt(light.position, glm::vec3(0.0f), glm::vec3(0.0f, 10.0f, 0.0f));
-    const auto light_view_proj = light_proj * light_view;
+    // const auto light_proj = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 0.01f, 100.0f);
+    // const auto light_view = glm::lookAt(light.position, glm::vec3(0.0f), glm::vec3(0.0f, 10.0f, 0.0f));
+    // const auto light_view_proj = light_proj * light_view;
 
     // shadow pass
-    glBindFramebuffer(GL_FRAMEBUFFER, shadow_fbo);
     {
+        const glm::vec3 lightDir = glm::normalize(debug.lightDirection);
+        for (int i = 0; i < NUM_CASCADES; i++)
+        {
+            float nearDist = (i == 0) ? 0.01f : cascade_splits[i - 1];
+            cascade_light_view_proj[i] = computeCascadeLightViewProj(
+                nearDist, cascade_splits[i],
+                camera.Projection(), camera.View(),
+                lightDir);
+        }
+
         glEnable(GL_CULL_FACE);
         glCullFace(GL_FRONT);
         glEnable(GL_DEPTH_TEST);
 
         glViewport(0, 0, 800, 600);
 
-        glClear(GL_DEPTH_BUFFER_BIT);
+        for (int i = 0; i < NUM_CASCADES; i++)
+        {
+            glBindFramebuffer(GL_FRAMEBUFFER, shadow_fbo[i]);
+            glClear(GL_DEPTH_BUFFER_BIT);
 
-        depth->use();
-        depth->setMat4("model", matrix);
-        depth->setMat4("light_view_proj", light_view_proj);
+            depth->use();
+            depth->setMat4("model", matrix);
+            depth->setMat4("light_view_proj", cascade_light_view_proj[i]);
 
-        suzanne->draw();
+            suzanne->draw();
+
+            const auto plane_bottom = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -2.0f, 0.0f));
+            depth->setMat4("model", plane_bottom);
+            plane.draw();
+
+            const auto plane_top = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 98.0f, 0.0f))
+                * glm::rotate(glm::mat4(1.0f), glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+            depth->setMat4("model", plane_top);
+            plane.draw();
+
+            const auto plane_front = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 48.0f, 50.0f))
+                * glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+            depth->setMat4("model", plane_front);
+            plane.draw();
+
+            const auto plane_back = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 48.0f, -50.0f))
+                * glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+            depth->setMat4("model", plane_back);
+            plane.draw();
+
+            const auto plane_right = glm::translate(glm::mat4(1.0f), glm::vec3(50.0f, 48.0f, 0.0f))
+                * glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+            depth->setMat4("model", plane_right);
+            plane.draw();
+
+            const auto plane_left = glm::translate(glm::mat4(1.0f), glm::vec3(-50.0f, 48.0f, 0.0f))
+                * glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+            depth->setMat4("model", plane_left);
+            plane.draw();
+        }
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     // render scene to framebuffer
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
@@ -252,17 +355,24 @@ void Scene::Render(void)
         glBindTexture(GL_TEXTURE_2D, gradientTexture->getID());
 
         glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, shadow_depth);
+        glBindTexture(GL_TEXTURE_2D, shadow_depth[0]);
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_2D, shadow_depth[1]);
+        glActiveTexture(GL_TEXTURE4);
+        glBindTexture(GL_TEXTURE_2D, shadow_depth[2]);
 
         toon->use();
 
         toon->setInt("texture0", 0);
         toon->setInt("gradientTex", 1);
-        toon->setInt("shadowMap", 2);
+        // toon->setInt("shadowMap", 2);
+        toon->setInt("shadowMap[0]", 2);
+        toon->setInt("shadowMap[1]", 3);
+        toon->setInt("shadowMap[2]", 4);
 
         toon->setMat4("model", matrix);
         toon->setMat4("view_proj", view_proj);
-        toon->setMat4("light_view_proj", light_view_proj);
+        // toon->setMat4("light_view_proj", light_view_proj);
         toon->setVec3("camera_position", camera.position);
         toon->setFloat("snap_resolution", vertexSettings.snap_resolution);
 
@@ -279,14 +389,24 @@ void Scene::Render(void)
         toon->setFloat("min_bias", debug.min_bias);
         toon->setFloat("max_bias", debug.max_bias);
         toon->setInt("use_pcf", debug.use_pcf);
+        toon->setInt("use_gouraud", debug.use_gouraud);
+        toon->setInt("show_cascades", debug.show_cascades);
+        toon->setInt("use_cascades", debug.use_cascades);
 
         toon->setInt("fog.enabled", debug.fog_enabled);
         toon->setVec3("fog.color", debug.fog_color);
         toon->setFloat("fog.near", debug.fog_near);
         toon->setFloat("fog.far", debug.fog_far);
-        
+
         toon->setVec3("light_position", light.position);
         toon->setVec3("light_color", light.color);
+        toon->setFloat("shininess", debug.shininess);
+
+        for (int i = 0; i < NUM_CASCADES; i++)
+        {
+            toon->setFloat("cascadeSplits[" + std::to_string(i) + "]", cascade_splits[i]);
+            toon->setMat4("cascadeLightViewProj[" + std::to_string(i) + "]", cascade_light_view_proj[i]);
+        }
 
         suzanne->draw();
 
@@ -400,11 +520,22 @@ void Scene::Debug(void)
         ImGui::ColorEdit3("Light Color", &light.color.x);
     }
 
+    if (ImGui::CollapsingHeader("Shading"))
+    {
+        ImGui::Checkbox("Gouraud", &debug.use_gouraud);
+        ImGui::SliderFloat("Shininess", &debug.shininess, 1.0f, 256.0f);
+    }
+
     if (ImGui::CollapsingHeader("Shadow Mapping"))
     {
         ImGui::SliderFloat("Min Bias", &debug.min_bias, 0.0f, 0.01f);
         ImGui::SliderFloat("Max Bias", &debug.max_bias, 0.0f, 0.1f);
         ImGui::Checkbox("PCF", &debug.use_pcf);
+        ImGui::Checkbox("Use Cascades", &debug.use_cascades);
+        ImGui::Checkbox("Show Cascades", &debug.show_cascades);
+        ImGui::SliderFloat("Cascade 0 Split", &cascade_splits[0], 1.0f, 50.0f);
+        ImGui::SliderFloat("Cascade 1 Split", &cascade_splits[1], 1.0f, 100.0f);
+        ImGui::SliderFloat("Cascade 2 Split", &cascade_splits[2], 10.0f, 200.0f);
     }
 
     if (ImGui::CollapsingHeader("Fog"))
@@ -429,6 +560,7 @@ void Scene::Debug(void)
         ImGui::SliderFloat("Chromatic Aberration", &crt.chromatic_aberration, 0.0f, 5.0f);
         ImGui::SliderFloat("Film Grain", &crt.noise_strength, 0.0f, 0.3f);
     }
+}
 
     if (ImGui::CollapsingHeader("Vertex Snapping"))
     {
@@ -438,7 +570,6 @@ void Scene::Debug(void)
             ImGui::SliderFloat("Vertex Resolution", &vertexSettings.snap_resolution, 0.0f, 100.0f);
         }
     }
-}
 
     ImGui::End();
 }
