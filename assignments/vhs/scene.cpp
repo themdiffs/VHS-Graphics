@@ -375,7 +375,7 @@ void Scene::Render(void)
         toon->setMat4("view_proj", view_proj);
         // toon->setMat4("light_view_proj", light_view_proj);
         toon->setVec3("camera_position", camera.position);
-        toon->setFloat("snap_resolution", vertexSettings.snap_resolution);
+        toon->setVec2("screen_resolution", glm::vec2(800, 600) * (1.0f / float(vertexSettings.snap_resolution)));
 
         toon->setVec3("light.position", light.position);
         toon->setVec3("light.color", light.color);
@@ -548,27 +548,27 @@ void Scene::Debug(void)
     }
 
     if (ImGui::CollapsingHeader("CRT Shader"))
-{
-    ImGui::Checkbox("Enabled", &crt.enabled);
-
-    if (crt.enabled)
     {
-        ImGui::SliderFloat("Curvature", &crt.curvature, 0.0f, 10.0f);
-        ImGui::SliderFloat("Scanline Intensity", &crt.scanline_intensity, 0.0f, 1.0f);
-        ImGui::SliderFloat("Scanline Count", &crt.scanline_count, 50.0f, 800.0f);
-        ImGui::SliderFloat("Vignette", &crt.vignette_strength, 0.0f, 1.0f);
-        ImGui::SliderFloat("Brightness", &crt.brightness, 0.5f, 2.0f);
-        ImGui::SliderFloat("Chromatic Aberration", &crt.chromatic_aberration, 0.0f, 5.0f);
-        ImGui::SliderFloat("Film Grain", &crt.noise_strength, 0.0f, 0.3f);
+        ImGui::Checkbox("Enabled", &crt.enabled);
+
+        if (crt.enabled)
+        {
+            ImGui::SliderFloat("Curvature", &crt.curvature, 0.0f, 10.0f);
+            ImGui::SliderFloat("Scanline Intensity", &crt.scanline_intensity, 0.0f, 1.0f);
+            ImGui::SliderFloat("Scanline Count", &crt.scanline_count, 50.0f, 800.0f);
+            ImGui::SliderFloat("Vignette", &crt.vignette_strength, 0.0f, 1.0f);
+            ImGui::SliderFloat("Brightness", &crt.brightness, 0.5f, 2.0f);
+            ImGui::SliderFloat("Chromatic Aberration", &crt.chromatic_aberration, 0.0f, 5.0f);
+            ImGui::SliderFloat("Film Grain", &crt.noise_strength, 0.0f, 0.3f);
+        }
     }
-}
 
     if (ImGui::CollapsingHeader("Vertex Snapping"))
     {
         ImGui::Checkbox("Enabled", &vertexSettings.enabled);
 
         if(vertexSettings.enabled){
-            ImGui::SliderFloat("Vertex Resolution", &vertexSettings.snap_resolution, 0.0f, 100.0f);
+            ImGui::SliderInt("Vertex Resolution", &vertexSettings.snap_resolution, 1, 10);
         }
     }
 
