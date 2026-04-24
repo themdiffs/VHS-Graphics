@@ -248,9 +248,10 @@ static glm::mat4 computeCascadeLightViewProj(
     glm::vec3 up = glm::abs(lightDir.y) < 0.99f ? glm::vec3(0, 1, 0) : glm::vec3(1, 0, 0);
     const glm::mat4 lightView = glm::lookAt(center - lightDir * 20.0f, center, up);
 
-    float minX = corners[0].x, maxX = corners[0].x;
-    float minY = corners[0].y, maxY = corners[0].y;
-    float minZ = corners[0].z, maxZ = corners[0].z;
+    glm::vec4 first = lightView * glm::vec4(corners[0], 1.0f);
+    float minX = first.x, maxX = first.x;
+    float minY = first.y, maxY = first.y;
+    float minZ = first.z, maxZ = first.z;
 
     for (auto& c : corners)
     {
@@ -263,7 +264,7 @@ static glm::mat4 computeCascadeLightViewProj(
     minZ -= 10.0f;
     maxZ += 10.0f;
 
-    const glm::mat4 lightProj = glm::ortho(minX, maxX, minY, maxY, minZ, maxZ);
+    const glm::mat4 lightProj = glm::ortho(minX, maxX, minY, maxY, -maxZ, -minZ);
     return lightProj * lightView;
 }
 
