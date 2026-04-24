@@ -8,7 +8,7 @@ layout(location = 3) in mat4 in_instancedMatrix;
 uniform mat4 view_proj;
 uniform mat4 model; // TODO: remove
 uniform mat4 light_view_proj;
-uniform float snap_resolution;
+uniform vec2 screen_resolution;
 
 // Gouraud lighting
 uniform vec3 camera_position;
@@ -23,14 +23,22 @@ out vec4 vs_light_proj_pos;
 // Gouraud lighting
 out vec3 vs_color;
 
-vec4 vertexSnapping(vec4 clip_pos, float resolution)
+vec4 vertexSnapping(vec4 position, vec2 resolution)
 {
-  // perspective divide
-  vec2 snap = clip_pos.xy / clip_pos.w;
-  // grid snap
-  snap = floor(snap * resolution * 0.5) / resolution;
+  vec3 perspective_divide = position.xyz / vec3(position.w);
+
+  vec2 screen_coords = (perspective_divide.xy + vec2(1.0, 1.0)) * vec2(resolution.x, resolution.y) * 0.5;
+
+  // snap by truncating to int
+  vec2 screen_coords_truncated = vec2(int(screen_coords.x), int(screen_coords.y));
+
+  vec2 clipRange = ((screen_coords_truncated * vec2(2.0, 2.0) / vec2(resolution.x, resolution.y)) - vec2(1.0, 1.0));
+
+  vec4 pos = vec4(clipRange.x, clipRange.y, perspective_divide.z, position.w);
   // undo perspective divide
-  return vec4(snap * clip_pos.w, clip_pos.zw);
+  pos.xyz *= position.w;
+
+  return pos;
 }
 
 void main()
@@ -56,5 +64,5 @@ void main()
   // vs_color = 0.1 * vec3(1.0) + diff * light_color + spec * light_color;
   vs_color = 0.1 * vec3(1.0) + diff * light_color + (spec * 0.3) * light_color;
   
-  gl_Position = vertexSnapping(view_proj * worldPos, snap_resolution);
+  gl_Position = vertexSnapping(view_proj * worldPos, screen_resolution);
 }

@@ -68,7 +68,7 @@ class Scene final : public batteries::Scene
 
     struct VertexSnapSettings{
       bool enabled = true;
-      float snap_resolution = 75;
+      int snap_resolution = 1;
     } vertexSettings;
 
     float total_time = 0.0f;
