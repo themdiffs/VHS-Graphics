@@ -99,10 +99,17 @@ struct
 Scene::Scene()
 {
     suzanne = std::make_unique<ew::Model>("assets/models/suzanne.obj");
+    chest = std::make_unique<ew::Model>("assets/models/Chest.obj");
+    eisle = std::make_unique<ew::Model>("assets/models/Eisle.obj");
+    megaman = std::make_unique<ew::Model>("assets/models/Megaman.obj");
+
     toon = std::make_unique<ew::Shader>("assets/shaders/default_shadowmap_instance.vs", "assets/shaders/default_shadowmap_instance.fs");
     texture = std::make_unique<ew::Texture>("assets/ornament-color.jpg");
     brickTexture = std::make_unique<ew::Texture>("assets/brick_color.jpg");
     gradientTexture = std::make_unique<ew::Texture>("assets/textures/ZAtoon.png");
+    chestTexture = std::make_unique<ew::Texture>("assets/textures/Chest.png");
+    eisleTexture = std::make_unique<ew::Texture>("assets/brick_color.jpg");
+    megamanTexture = std::make_unique<ew::Texture>("assets/brick_color.jpg");
 
     depth = std::make_unique<ew::Shader>("assets/shaders/depth.vs", "assets/shaders/depth.fs");
 
@@ -130,6 +137,11 @@ postprocess_crt = std::make_unique<ew::Shader>("assets/shaders/fullscreen.vs", "
     cascade_splits[0] = 8.0f;
     cascade_splits[1] = 25.0f;
     cascade_splits[2] = 60.0f;
+
+    sceneObjects.push_back({"Suzanne", suzanne.get(), glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)) * glm::rotate(glm::mat4(1.0f), glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(1.0f)), brickTexture.get()});
+    sceneObjects.push_back({"Chest", chest.get(), glm::translate(glm::mat4(1.0f), glm::vec3(8.0f, -2.0f, 0.0f)) * glm::rotate(glm::mat4(1.0f), glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(0.1f)), chestTexture.get()});
+    sceneObjects.push_back({"Eisle", eisle.get(), glm::translate(glm::mat4(1.0f), glm::vec3(-8.0f, -2.0f, 0.0f)) * glm::rotate(glm::mat4(1.0f), glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(0.1f)), eisleTexture.get()});
+    sceneObjects.push_back({"Megaman", megaman.get(), glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 2.0f, 10.0f)) * glm::rotate(glm::mat4(1.0f), glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(0.2f)), megamanTexture.get()});
 }
 
 Scene::~Scene()
@@ -216,7 +228,6 @@ void Scene::Update(float dt)
     lightMatrix[3] = glm::vec4(light.position, 1.0f);
 }
 
-auto matrix = glm::mat4(1.0f);
 
 static glm::mat4 computeCascadeLightViewProj(
     float nearDist,
@@ -300,10 +311,13 @@ void Scene::Render(void)
             glClear(GL_DEPTH_BUFFER_BIT);
 
             depth->use();
-            depth->setMat4("model", matrix);
             depth->setMat4("light_view_proj", cascade_light_view_proj[i]);
 
-            suzanne->draw();
+            for (auto& obj : sceneObjects)
+            {
+                depth->setMat4("model", obj.transform);
+                obj.model->draw();
+            }
 
             const auto plane_bottom = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -2.0f, 0.0f));
             depth->setMat4("model", plane_bottom);
@@ -371,7 +385,6 @@ void Scene::Render(void)
         toon->setInt("shadowMap[1]", 3);
         toon->setInt("shadowMap[2]", 4);
 
-        toon->setMat4("model", matrix);
         toon->setMat4("view_proj", view_proj);
         // toon->setMat4("light_view_proj", light_view_proj);
         toon->setVec3("camera_position", camera.position);
@@ -409,7 +422,16 @@ void Scene::Render(void)
             toon->setMat4("cascadeLightViewProj[" + std::to_string(i) + "]", cascade_light_view_proj[i]);
         }
 
-        suzanne->draw();
+        for (auto& obj : sceneObjects)
+        {
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, obj.texture->getID());
+            toon->setMat4("model", obj.transform);
+            obj.model->draw();
+        }
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, brickTexture->getID());
 
         // bottom
         const auto plane_bottom = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -2.0f, 0.0f));

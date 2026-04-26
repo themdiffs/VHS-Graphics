@@ -8,6 +8,16 @@
 #include "ew/shader.h"
 #include "ew/texture.h"
 
+#include <vector>
+
+struct SceneObject
+{
+    const char* name;
+    ew::Model* model;
+    glm::mat4 transform;
+    ew::Texture* texture;
+};
+
 class Scene final : public batteries::Scene
 {
   public:
@@ -23,11 +33,17 @@ class Scene final : public batteries::Scene
     void CreateDepthBuffer();
 
     std::unique_ptr<ew::Model> suzanne;
+    std::unique_ptr<ew::Model> chest;
+    std::unique_ptr<ew::Model> eisle;
+    std::unique_ptr<ew::Model> megaman;
+    std::vector<SceneObject> sceneObjects;
     std::unique_ptr<ew::Shader> toon;
     std::unique_ptr<ew::Texture> texture;
     std::unique_ptr<ew::Texture> brickTexture;
     std::unique_ptr<ew::Texture> gradientTexture;
-
+    std::unique_ptr<ew::Texture> chestTexture;
+    std::unique_ptr<ew::Texture> eisleTexture;
+    std::unique_ptr<ew::Texture> megamanTexture;
     std::unique_ptr<ew::Shader> depth;
 
     std::unique_ptr<ew::Shader> postprocess_none;
