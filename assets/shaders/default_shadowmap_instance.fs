@@ -28,7 +28,8 @@ struct Fog {
   bool enabled;
 };
 
-out vec4 FragColor;
+layout(location = 0) out vec4 FragColor;
+layout(location = 1) out float out_linear_depth;
 
 in vec3 vs_position;
 in vec3 vs_normal;
@@ -58,6 +59,8 @@ noperspective in vec2 vs_texcoord_affine;
 uniform bool use_affine;
 uniform bool quantize_colors;
 uniform int quantization_amount;
+uniform float camera_near;
+uniform float camera_far;
 
 float shadowCalculation(vec4 fragPosLightSpace, sampler2D map)
 {
@@ -166,4 +169,6 @@ void main()
   {
     FragColor = floor(FragColor * float(quantization_amount)) / float(quantization_amount);
   }
+
+  out_linear_depth = clamp((dist - camera_near) / (camera_far - camera_near), 0.0, 1.0);
 }

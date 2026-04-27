@@ -64,11 +64,6 @@ class Scene final : public batteries::Scene
     GLuint fbo_texture;
     GLuint fbo_depth;
 
-    // depth buffer
-    // GLuint shadow_fbo;
-    // GLuint shadow_texture;
-    // GLuint shadow_depth;
-
     static const int NUM_CASCADES = 3;
     GLuint shadow_fbo[NUM_CASCADES];
     GLuint shadow_depth[NUM_CASCADES];
@@ -83,7 +78,6 @@ class Scene final : public batteries::Scene
         glm::vec3 color2;
     } palette;
 
-    // crt setting s stuff
     struct CRTSettings
     {
         bool enabled = true;
@@ -96,19 +90,31 @@ class Scene final : public batteries::Scene
         float noise_strength = 0.08f;
     } crt;
 
-    struct VertexSnapSettings{
-      bool enabled = true;
-      int snap_resolution = 1;
+    struct VertexSnapSettings
+    {
+        bool enabled = true;
+        int snap_resolution = 1;
     } vertexSettings;
 
-    struct AffineTextureMappingSettings{
-      bool enabled = true;
+    struct AffineTextureMappingSettings
+    {
+        bool enabled = true;
     } affineSettings;
 
-    struct ColorQuantizationSettings{
-      bool enabled = true;
-      int colors = 32;
+    struct ColorQuantizationSettings
+    {
+        bool enabled = true;
+        int colors = 32;
     } colorQuantizationSettings;
+
+    struct PixelationSettings
+    {
+        bool  enabled     = false;
+        bool  depth_based = true;
+        float pixel_size  = 8.0f;
+        float depth_bias  = 0.0f;
+        float depth_power = 0.2f;
+    } pixelationSettings;
 
     float total_time = 0.0f;
 };
