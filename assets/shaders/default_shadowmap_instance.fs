@@ -56,6 +56,8 @@ uniform float cascadeSplits[3];
 uniform mat4 cascadeLightViewProj[3];
 noperspective in vec2 vs_texcoord_affine;
 uniform bool use_affine;
+uniform bool quantize_colors;
+uniform int quantization_amount;
 
 float shadowCalculation(vec4 fragPosLightSpace, sampler2D map)
 {
@@ -151,10 +153,17 @@ void main()
   }
   // FragColor = vec4(lighting, 1.0);
   FragColor = vec4(lighting * texColor, 1.0);
+
   if (show_cascades)
   {
     if      (cascade == 0) FragColor = mix(FragColor, vec4(1.0, 0.2, 0.2, 1.0), 0.3);
     else if (cascade == 1) FragColor = mix(FragColor, vec4(0.2, 1.0, 0.2, 1.0), 0.3);
     else                   FragColor = mix(FragColor, vec4(0.2, 0.2, 1.0, 1.0), 0.3);
+  }
+
+
+  if(quantize_colors)
+  {
+    FragColor = floor(FragColor * float(quantization_amount)) / float(quantization_amount);
   }
 }

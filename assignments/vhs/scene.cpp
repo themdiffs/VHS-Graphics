@@ -390,6 +390,8 @@ void Scene::Render(void)
         toon->setVec3("camera_position", camera.position);
         toon->setVec2("screen_resolution", glm::vec2(800, 600) * (1.0f / float(vertexSettings.snap_resolution)));
         toon->setBool("use_affine", affineSettings.enabled);
+        toon->setBool("quantize_colors", colorQuantizationSettings.enabled);
+        toon->setInt("quantization_amount", colorQuantizationSettings.colors);
 
         toon->setVec3("light.position", light.position);
         toon->setVec3("light.color", light.color);
@@ -564,7 +566,7 @@ void Scene::Debug(void)
 
     if (ImGui::CollapsingHeader("Fog"))
     {
-        ImGui::Checkbox("Enabled", &debug.fog_enabled);
+        ImGui::Checkbox("Fog Enabled", &debug.fog_enabled);
         ImGui::ColorEdit3("Fog Color", &debug.fog_color[0]);
         ImGui::SliderFloat("Fog Near", &debug.fog_near, 0.0f, 100.0f);
         ImGui::SliderFloat("Fog Far", &debug.fog_far, 0.0f, 200.0f);
@@ -572,7 +574,7 @@ void Scene::Debug(void)
 
     if (ImGui::CollapsingHeader("CRT Shader"))
     {
-        ImGui::Checkbox("Enabled", &crt.enabled);
+        ImGui::Checkbox("CRT Enabled", &crt.enabled);
 
         if (crt.enabled)
         {
@@ -588,7 +590,7 @@ void Scene::Debug(void)
 
     if (ImGui::CollapsingHeader("Vertex Snapping"))
     {
-        ImGui::Checkbox("Enabled", &vertexSettings.enabled);
+        ImGui::Checkbox("Snapping Enabled", &vertexSettings.enabled);
 
         if(vertexSettings.enabled){
             ImGui::SliderInt("Vertex Resolution", &vertexSettings.snap_resolution, 1, 10);
@@ -596,7 +598,17 @@ void Scene::Debug(void)
     }
 
     if(ImGui::CollapsingHeader("Affine Texture Mapping")){
-        ImGui::Checkbox("Enabled", &affineSettings.enabled);
+        ImGui::Checkbox("Affine Enabled", &affineSettings.enabled);
+    }
+
+    if(ImGui::CollapsingHeader("Color Quantization"))
+    {
+        ImGui::Checkbox("Color Quantization Enabled", &colorQuantizationSettings.enabled);
+
+        if(colorQuantizationSettings.enabled)
+        {
+            ImGui::SliderInt("Color Resolution", &colorQuantizationSettings.colors, 1, 64);
+        }
     }
 
     ImGui::End();

@@ -96,5 +96,10 @@ class Scene final : public batteries::Scene
       bool enabled = true;
     } affineSettings;
 
+    struct ColorQuantizationSettings{
+      bool enabled = true;
+      int colors = 32;
+    } colorQuantizationSettings;
+
     float total_time = 0.0f;
 };
