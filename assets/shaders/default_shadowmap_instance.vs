@@ -23,17 +23,21 @@ out vec3 vs_color;
 
 vec4 vertexSnapping(vec4 position, vec2 resolution)
 {
+  // divide by w to convert from clip space to normalized device coordinates
   vec3 perspective_divide = position.xyz / vec3(position.w);
 
+  // converts normalized device coordinates to screen coordinates
   vec2 screen_coords = (perspective_divide.xy + vec2(1.0, 1.0)) * vec2(resolution.x, resolution.y) * 0.5;
 
-  // snap by truncating to int
+  // snap to nearest pixel by truncating to int (this is what gets the vertex wobble)
   vec2 screen_coords_truncated = vec2(int(screen_coords.x), int(screen_coords.y));
 
+  // converts snapped pixels back to normalized device coords
   vec2 clipRange = ((screen_coords_truncated * vec2(2.0, 2.0) / vec2(resolution.x, resolution.y)) - vec2(1.0, 1.0));
 
   vec4 pos = vec4(clipRange.x, clipRange.y, perspective_divide.z, position.w);
-  // undo perspective divide
+  
+  // undo perspective divide to get back to clip space
   pos.xyz *= position.w;
 
   return pos;
