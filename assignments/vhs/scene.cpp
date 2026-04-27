@@ -129,10 +129,13 @@ postprocess_crt = std::make_unique<ew::Shader>("assets/shaders/fullscreen.vs", "
     cascade_splits[1] = 25.0f;
     cascade_splits[2] = 60.0f;
 
+    const float islandSize = 29.0f;
+
     const std::vector<SceneObjectInit> sceneObjectInits = {
 
         // name     modelPath                    texturePath                  translation           angle   rotationAxis        scale
         // {"Suzanne", "assets/models/suzanne.obj", "assets/brick_color.jpg", {0.0f, 0.0f, 0.0f}, 0.0f, {0.0f, 1.0f, 0.0f}, {1.0f, 1.0f, 1.0f}},
+        {"Island", "assets/models/Pawprint isle.obj", "assets/textures/PawprintGrass.png", {19.0f * islandSize, -0.5f * islandSize, -20.5f * islandSize}, 0.0f, {0.0f, 1.0f, 0.0f}, {islandSize, islandSize, islandSize}},
         {"Chest", "assets/models/Chest.obj", "assets/textures/Chest.png", {8.0f, -2.0f, 0.0f}, 180.0f, {0.0f, 1.0f, 0.0f}, {0.1f, 0.1f, 0.1f}},
         {"Eisle", "assets/models/Eisle.obj", "assets/brick_color.jpg", {-8.0f, -2.0f, 0.0f}, 0.0f, {0.0f, 1.0f, 0.0f}, {0.1f, 0.1f, 0.1f}},
         {"Megaman", "assets/models/Megaman.obj", "assets/brick_color.jpg", {0.0f, 2.0f, 10.0f}, 180.0f, {0.0f, 1.0f, 0.0f}, {0.2f, 0.2f, 0.2f}},
@@ -354,6 +357,7 @@ void Scene::Render(void)
                 obj.model->draw();
             }
 
+            /*
             const auto plane_bottom = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -2.0f, 0.0f));
             depth->setMat4("model", plane_bottom);
             plane.draw();
@@ -377,6 +381,7 @@ void Scene::Render(void)
             const auto plane_left = glm::translate(glm::mat4(1.0f), glm::vec3(-50.0f, 48.0f, 0.0f)) * glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
             depth->setMat4("model", plane_left);
             plane.draw();
+            */
         }
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
@@ -466,6 +471,7 @@ void Scene::Render(void)
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, brickTexture->getID());
 
+        /*
         // bottom
         const auto plane_bottom = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -2.0f, 0.0f));
         toon->setMat4("model", plane_bottom);
@@ -495,6 +501,7 @@ void Scene::Render(void)
         const auto plane_left = glm::translate(glm::mat4(1.0f), glm::vec3(-50.0f, 48.0f, 0.0f)) * glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
         toon->setMat4("model", plane_left);
         plane.draw();
+        */
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
