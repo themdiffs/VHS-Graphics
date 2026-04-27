@@ -98,18 +98,9 @@ struct
 
 Scene::Scene()
 {
-    suzanne = std::make_unique<ew::Model>("assets/models/suzanne.obj");
-    chest = std::make_unique<ew::Model>("assets/models/Chest.obj");
-    eisle = std::make_unique<ew::Model>("assets/models/Eisle.obj");
-    megaman = std::make_unique<ew::Model>("assets/models/Megaman.obj");
-
     toon = std::make_unique<ew::Shader>("assets/shaders/default_shadowmap_instance.vs", "assets/shaders/default_shadowmap_instance.fs");
-    texture = std::make_unique<ew::Texture>("assets/ornament-color.jpg");
     brickTexture = std::make_unique<ew::Texture>("assets/brick_color.jpg");
     gradientTexture = std::make_unique<ew::Texture>("assets/textures/ZAtoon.png");
-    chestTexture = std::make_unique<ew::Texture>("assets/textures/Chest.png");
-    eisleTexture = std::make_unique<ew::Texture>("assets/brick_color.jpg");
-    megamanTexture = std::make_unique<ew::Texture>("assets/brick_color.jpg");
 
     depth = std::make_unique<ew::Shader>("assets/shaders/depth.vs", "assets/shaders/depth.fs");
 
@@ -138,10 +129,26 @@ postprocess_crt = std::make_unique<ew::Shader>("assets/shaders/fullscreen.vs", "
     cascade_splits[1] = 25.0f;
     cascade_splits[2] = 60.0f;
 
-    sceneObjects.push_back({"Suzanne", suzanne.get(), glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)) * glm::rotate(glm::mat4(1.0f), glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(1.0f)), brickTexture.get()});
-    sceneObjects.push_back({"Chest", chest.get(), glm::translate(glm::mat4(1.0f), glm::vec3(8.0f, -2.0f, 0.0f)) * glm::rotate(glm::mat4(1.0f), glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(0.1f)), chestTexture.get()});
-    sceneObjects.push_back({"Eisle", eisle.get(), glm::translate(glm::mat4(1.0f), glm::vec3(-8.0f, -2.0f, 0.0f)) * glm::rotate(glm::mat4(1.0f), glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(0.1f)), eisleTexture.get()});
-    sceneObjects.push_back({"Megaman", megaman.get(), glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 2.0f, 10.0f)) * glm::rotate(glm::mat4(1.0f), glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(0.2f)), megamanTexture.get()});
+    const std::vector<SceneObjectInit> sceneObjectInits = {
+        
+        // name     modelPath                    texturePath                  translation           angle   rotationAxis        scale
+        {"Suzanne", "assets/models/suzanne.obj", "assets/brick_color.jpg",    {0.0f,  0.0f,  0.0f}, 0.0f,   {0.0f, 1.0f, 0.0f}, {1.0f, 1.0f, 1.0f}},
+        {"Chest",   "assets/models/Chest.obj",   "assets/textures/Chest.png", {8.0f, -2.0f,  0.0f}, 180.0f, {0.0f, 1.0f, 0.0f}, {0.1f, 0.1f, 0.1f}},
+        {"Eisle",   "assets/models/Eisle.obj",   "assets/brick_color.jpg",   {-8.0f, -2.0f,  0.0f}, 0.0f,   {0.0f, 1.0f, 0.0f}, {0.1f, 0.1f, 0.1f}},
+        {"Megaman", "assets/models/Megaman.obj", "assets/brick_color.jpg",    {0.0f,  2.0f, 10.0f}, 180.0f, {0.0f, 1.0f, 0.0f}, {0.2f, 0.2f, 0.2f}},
+    };
+
+    for (const auto& init : sceneObjectInits)
+    {
+        auto model = std::make_unique<ew::Model>(init.modelPath);
+        auto texture = std::make_unique<ew::Texture>(init.texturePath);
+        glm::mat4 transform = glm::translate(glm::mat4(1.0f), init.translation)
+            * glm::rotate(glm::mat4(1.0f), glm::radians(init.rotationDegrees), init.rotationAxis)
+            * glm::scale(glm::mat4(1.0f), init.scale);
+        sceneObjects.push_back({init.name, model.get(), transform, texture.get()});
+        ownedModels.push_back(std::move(model));
+        ownedTextures.push_back(std::move(texture));
+    }
 }
 
 Scene::~Scene()

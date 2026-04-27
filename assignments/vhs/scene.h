@@ -18,6 +18,17 @@ struct SceneObject
     ew::Texture* texture;
 };
 
+struct SceneObjectInit
+{
+    const char* name;
+    const char* modelPath;
+    const char* texturePath;
+    glm::vec3 translation;
+    float rotationDegrees;
+    glm::vec3 rotationAxis;
+    glm::vec3 scale;
+};
+
 class Scene final : public batteries::Scene
 {
   public:
@@ -32,18 +43,15 @@ class Scene final : public batteries::Scene
     void CreateFrameBuffer();
     void CreateDepthBuffer();
 
-    std::unique_ptr<ew::Model> suzanne;
-    std::unique_ptr<ew::Model> chest;
-    std::unique_ptr<ew::Model> eisle;
-    std::unique_ptr<ew::Model> megaman;
+    std::vector<std::unique_ptr<ew::Model>> ownedModels;
+    std::vector<std::unique_ptr<ew::Texture>> ownedTextures;
+
     std::vector<SceneObject> sceneObjects;
+
     std::unique_ptr<ew::Shader> toon;
-    std::unique_ptr<ew::Texture> texture;
     std::unique_ptr<ew::Texture> brickTexture;
     std::unique_ptr<ew::Texture> gradientTexture;
-    std::unique_ptr<ew::Texture> chestTexture;
-    std::unique_ptr<ew::Texture> eisleTexture;
-    std::unique_ptr<ew::Texture> megamanTexture;
+
     std::unique_ptr<ew::Shader> depth;
 
     std::unique_ptr<ew::Shader> postprocess_none;
@@ -60,6 +68,7 @@ class Scene final : public batteries::Scene
     // GLuint shadow_fbo;
     // GLuint shadow_texture;
     // GLuint shadow_depth;
+
     static const int NUM_CASCADES = 3;
     GLuint shadow_fbo[NUM_CASCADES];
     GLuint shadow_depth[NUM_CASCADES];
