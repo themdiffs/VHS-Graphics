@@ -24,6 +24,7 @@ namespace ew {
 		void setVec4(const std::string& name, float x, float y, float z, float w) const;
 		void setVec4(const std::string& name, const glm::vec4& v) const;
 		void setMat4(const std::string& name, const glm::mat4& m) const;
+		void setBool(const std::string& name, bool b) const;
 	private:
 		unsigned int m_id = 0; //Shader program handle
 		unsigned int vertex = 0; //Shader program handle

@@ -3,6 +3,7 @@ layout(location = 0) in vec3 in_position;
 layout(location = 1) in vec3 in_normal;
 layout(location = 2) in vec2 in_texcoord;
 layout(location = 3) in mat4 in_instancedMatrix;
+
 uniform mat4 view_proj;
 uniform mat4 model; // TODO: remove
 uniform mat4 light_view_proj;
@@ -16,6 +17,7 @@ out vec3 vs_position;
 out vec3 vs_normal;
 out vec2 vs_texcoord;
 out vec4 vs_light_proj_pos;
+noperspective out vec2 vs_texcoord_affine;
 // Gouraud lighting
 out vec3 vs_color;
 
@@ -58,5 +60,6 @@ void main()
   // vs_color = 0.1 * vec3(1.0) + diff * light_color + spec * light_color;
   vs_color = 0.1 * vec3(1.0) + diff * light_color + (spec * 0.3) * light_color;
   
+  vs_texcoord_affine = in_texcoord;
   gl_Position = vertexSnapping(view_proj * worldPos, screen_resolution);
 }

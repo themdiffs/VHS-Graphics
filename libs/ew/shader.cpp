@@ -134,4 +134,8 @@ namespace ew
 	{
 		glUniformMatrix4fv(glGetUniformLocation(m_id, name.c_str()), 1, GL_FALSE, glm::value_ptr(m));
 	}
+	void Shader::setBool(const std::string& name, bool b) const
+	{
+		glUniform1i(glGetUniformLocation(m_id, name.c_str()), (int)b);
+	}
 }

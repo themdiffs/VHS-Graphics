@@ -54,6 +54,8 @@ uniform bool show_cascades;
 uniform bool use_cascades;
 uniform float cascadeSplits[3];
 uniform mat4 cascadeLightViewProj[3];
+noperspective in vec2 vs_texcoord_affine;
+uniform bool use_affine;
 
 float shadowCalculation(vec4 fragPosLightSpace, sampler2D map)
 {
@@ -95,6 +97,7 @@ float shadowCalculation(vec4 fragPosLightSpace, sampler2D map)
 
 void main()
 {
+  vec2 uv = use_affine ? vs_texcoord_affine : vs_texcoord;
 //   vec3 normal = normalize(vs_normal);
   float dist = length(camera_position - vs_position);
 
@@ -114,7 +117,7 @@ void main()
 //   vec3 light_dir = normalize(light.position - vs_position);
 //   vec3 view_dir = normalize(camera_position - vs_position);
 //   vec3 halfway_dir = normalize(light_dir + view_dir);
-  vec3 texColor = texture(texture0, vs_texcoord).rgb;
+  vec3 texColor = texture(texture0, uv).rgb;
   // vec3 ambient = 0.1 * texColor;
   // float diff = max(dot(normal, light_dir), 0.0);
   // vec3 diffuse = diff * light.color * texColor;

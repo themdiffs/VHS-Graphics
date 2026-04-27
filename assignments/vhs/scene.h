@@ -92,5 +92,9 @@ class Scene final : public batteries::Scene
       int snap_resolution = 1;
     } vertexSettings;
 
+    struct AffineTextureMappingSettings{
+      bool enabled = true;
+    } affineSettings;
+
     float total_time = 0.0f;
 };
