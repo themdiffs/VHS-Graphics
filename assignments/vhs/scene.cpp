@@ -130,21 +130,44 @@ postprocess_crt = std::make_unique<ew::Shader>("assets/shaders/fullscreen.vs", "
     cascade_splits[2] = 60.0f;
 
     const std::vector<SceneObjectInit> sceneObjectInits = {
-        
+
         // name     modelPath                    texturePath                  translation           angle   rotationAxis        scale
-        {"Suzanne", "assets/models/suzanne.obj", "assets/brick_color.jpg",    {0.0f,  0.0f,  0.0f}, 0.0f,   {0.0f, 1.0f, 0.0f}, {1.0f, 1.0f, 1.0f}},
-        {"Chest",   "assets/models/Chest.obj",   "assets/textures/Chest.png", {8.0f, -2.0f,  0.0f}, 180.0f, {0.0f, 1.0f, 0.0f}, {0.1f, 0.1f, 0.1f}},
-        {"Eisle",   "assets/models/Eisle.obj",   "assets/brick_color.jpg",   {-8.0f, -2.0f,  0.0f}, 0.0f,   {0.0f, 1.0f, 0.0f}, {0.1f, 0.1f, 0.1f}},
-        {"Megaman", "assets/models/Megaman.obj", "assets/brick_color.jpg",    {0.0f,  2.0f, 10.0f}, 180.0f, {0.0f, 1.0f, 0.0f}, {0.2f, 0.2f, 0.2f}},
+        {"Suzanne", "assets/models/suzanne.obj", "assets/brick_color.jpg", {0.0f, 0.0f, 0.0f}, 0.0f, {0.0f, 1.0f, 0.0f}, {1.0f, 1.0f, 1.0f}},
+        {"Chest", "assets/models/Chest.obj", "assets/textures/Chest.png", {8.0f, -2.0f, 0.0f}, 180.0f, {0.0f, 1.0f, 0.0f}, {0.1f, 0.1f, 0.1f}},
+        {"Eisle", "assets/models/Eisle.obj", "assets/brick_color.jpg", {-8.0f, -2.0f, 0.0f}, 0.0f, {0.0f, 1.0f, 0.0f}, {0.1f, 0.1f, 0.1f}},
+        {"Megaman", "assets/models/Megaman.obj", "assets/brick_color.jpg", {0.0f, 2.0f, 10.0f}, 180.0f, {0.0f, 1.0f, 0.0f}, {0.2f, 0.2f, 0.2f}},
+        // {"FirTree", "assets/models/firTree.obj", "assets/textures/firbark.png",    {-5.0f,  2.0f, 10.0f}, 180.0f, {0.0f, 1.0f, 0.0f}, {0.11f, 0.11f, 0.11f}},
+        {"Alien", "assets/models/Alien.obj", "assets/textures/Alien.png", {-14.0f, 0.0f, -10.0f}, 30.0f, {0.0f, 1.0f, 0.0f}, {1.0f, 1.0f, 1.0f}},
+
+        {"Tree_01", "assets/models/N64_Tree.obj", "assets/textures/N64_Tree.png", {9.76f, 0.0f, -33.25f}, 99.01f, {0.0f, 1.0f, 0.0f}, {0.11f, 0.11f, 0.11f}},
+        {"Tree_02", "assets/models/N64_Tree.obj", "assets/textures/N64_Tree.png", {-25.23f, -1.0f, -27.83f}, 266.64f, {0.0f, 1.0f, 0.0f}, {0.10f, 0.10f, 0.10f}},
+        {"Tree_03", "assets/models/N64_Tree.obj", "assets/textures/N64_Tree.png", {-28.44f, -1.0f, -18.71f}, 216.73f, {0.0f, 1.0f, 0.0f}, {0.11f, 0.11f, 0.11f}},
+        {"Tree_04", "assets/models/N64_Tree.obj", "assets/textures/N64_Tree.png", {15.12f, -1.0f, 14.09f}, 151.03f, {0.0f, 1.0f, 0.0f}, {0.13f, 0.13f, 0.13f}},
+        {"Tree_05", "assets/models/N64_Tree.obj", "assets/textures/N64_Tree.png", {6.25f, -1.0f, 21.66f}, 2.34f, {0.0f, 1.0f, 0.0f}, {0.11f, 0.11f, 0.11f}},
+        {"Tree_06", "assets/models/N64_Tree.obj", "assets/textures/N64_Tree.png", {13.87f, -1.0f, -11.18f}, 55.97f, {0.0f, 1.0f, 0.0f}, {0.12f, 0.12f, 0.12f}},
+        {"Tree_07", "assets/models/N64_Tree.obj", "assets/textures/N64_Tree.png", {-27.85f, -1.0f, -8.41f}, 129.23f, {0.0f, 1.0f, 0.0f}, {0.12f, 0.12f, 0.12f}},
+        {"Tree_08", "assets/models/N64_Tree.obj", "assets/textures/N64_Tree.png", {16.08f, -1.0f, 2.54f}, 350.32f, {0.0f, 1.0f, 0.0f}, {0.13f, 0.13f, 0.13f}},
+        {"Tree_09", "assets/models/N64_Tree.obj", "assets/textures/N64_Tree.png", {-9.69f, -1.0f, -21.54f}, 25.04f, {0.0f, 1.0f, 0.0f}, {0.11f, 0.11f, 0.11f}},
+        {"Tree_10", "assets/models/N64_Tree.obj", "assets/textures/N64_Tree.png", {19.11f, -1.0f, 33.97f}, 307.91f, {0.0f, 1.0f, 0.0f}, {0.10f, 0.10f, 0.10f}},
+        {"Tree_11", "assets/models/N64_Tree.obj", "assets/textures/N64_Tree.png", {23.39f, -1.0f, -23.61f}, 127.90f, {0.0f, 1.0f, 0.0f}, {0.12f, 0.12f, 0.12f}},
+        {"Tree_12", "assets/models/N64_Tree.obj", "assets/textures/N64_Tree.png", {-30.00f, -1.0f, 9.45f}, 192.29f, {0.0f, 1.0f, 0.0f}, {0.11f, 0.11f, 0.11f}},
+        {"Tree_13", "assets/models/N64_Tree.obj", "assets/textures/N64_Tree.png", {34.27f, -1.0f, 9.80f}, 200.50f, {0.0f, 1.0f, 0.0f}, {0.12f, 0.12f, 0.12f}},
+        {"Tree_14", "assets/models/N64_Tree.obj", "assets/textures/N64_Tree.png", {24.00f, -1.0f, 19.32f}, 82.46f, {0.0f, 1.0f, 0.0f}, {0.10f, 0.10f, 0.10f}},
+        {"Tree_15", "assets/models/N64_Tree.obj", "assets/textures/N64_Tree.png", {21.35f, -1.0f, -6.92f}, 23.83f, {0.0f, 1.0f, 0.0f}, {0.12f, 0.12f, 0.12f}},
+        {"Tree_16", "assets/models/N64_Tree.obj", "assets/textures/N64_Tree.png", {-20.12f, -1.0f, -0.05f}, 318.49f, {0.0f, 1.0f, 0.0f}, {0.13f, 0.13f, 0.13f}},
+        {"Tree_17", "assets/models/N64_Tree.obj", "assets/textures/N64_Tree.png", {34.81f, -1.0f, -25.32f}, 177.67f, {0.0f, 1.0f, 0.0f}, {0.10f, 0.10f, 0.10f}},
+        {"Tree_18", "assets/models/N64_Tree.obj", "assets/textures/N64_Tree.png", {-26.98f, -1.0f, 26.94f}, 270.32f, {0.0f, 1.0f, 0.0f}, {0.12f, 0.12f, 0.12f}},
+        {"Tree_19", "assets/models/N64_Tree.obj", "assets/textures/N64_Tree.png", {-3.24f, -1.0f, 31.77f}, 315.31f, {0.0f, 1.0f, 0.0f}, {0.12f, 0.12f, 0.12f}},
+        {"Tree_20", "assets/models/N64_Tree.obj", "assets/textures/N64_Tree.png", {33.03f, -1.0f, 18.34f}, 182.77f, {0.0f, 1.0f, 0.0f}, {0.10f, 0.10f, 0.10f}},
+        {"Tree_21", "assets/models/N64_Tree.obj", "assets/textures/N64_Tree.png", {25.94f, -1.0f, -14.11f}, 230.02f, {0.0f, 1.0f, 0.0f}, {0.11f, 0.11f, 0.11f}},
+        {"Tree_22", "assets/models/N64_Tree.obj", "assets/textures/N64_Tree.png", {-24.30f, -1.0f, 18.38f}, 194.18f, {0.0f, 1.0f, 0.0f}, {0.10f, 0.10f, 0.10f}},
     };
 
     for (const auto& init : sceneObjectInits)
     {
         auto model = std::make_unique<ew::Model>(init.modelPath);
         auto texture = std::make_unique<ew::Texture>(init.texturePath);
-        glm::mat4 transform = glm::translate(glm::mat4(1.0f), init.translation)
-            * glm::rotate(glm::mat4(1.0f), glm::radians(init.rotationDegrees), init.rotationAxis)
-            * glm::scale(glm::mat4(1.0f), init.scale);
+        glm::mat4 transform = glm::translate(glm::mat4(1.0f), init.translation) * glm::rotate(glm::mat4(1.0f), glm::radians(init.rotationDegrees), init.rotationAxis) * glm::scale(glm::mat4(1.0f), init.scale);
         sceneObjects.push_back({init.name, model.get(), transform, texture.get()});
         ownedModels.push_back(std::move(model));
         ownedTextures.push_back(std::move(texture));
@@ -235,7 +258,6 @@ void Scene::Update(float dt)
     lightMatrix[3] = glm::vec4(light.position, 1.0f);
 }
 
-
 static glm::mat4 computeCascadeLightViewProj(
     float nearDist,
     float farDist,
@@ -255,12 +277,13 @@ static glm::mat4 computeCascadeLightViewProj(
         for (int y = 0; y < 2; y++)
             for (int z = 0; z < 2; z++)
             {
-                glm::vec4 pt = inv * glm::vec4(2.0f*x-1.0f, 2.0f*y-1.0f, 2.0f*z-1.0f, 1.0f);
+                glm::vec4 pt = inv * glm::vec4(2.0f * x - 1.0f, 2.0f * y - 1.0f, 2.0f * z - 1.0f, 1.0f);
                 corners[idx++] = glm::vec3(pt) / pt.w;
             }
 
     glm::vec3 center(0.0f);
-    for (auto& c : corners) center += c;
+    for (auto& c : corners)
+        center += c;
     center /= 8.0f;
 
     glm::vec3 up = glm::abs(lightDir.y) < 0.99f ? glm::vec3(0, 1, 0) : glm::vec3(1, 0, 0);
@@ -274,9 +297,12 @@ static glm::mat4 computeCascadeLightViewProj(
     for (auto& c : corners)
     {
         glm::vec4 lc = lightView * glm::vec4(c, 1.0f);
-        minX = std::min(minX, lc.x); maxX = std::max(maxX, lc.x);
-        minY = std::min(minY, lc.y); maxY = std::max(maxY, lc.y);
-        minZ = std::min(minZ, lc.z); maxZ = std::max(maxZ, lc.z);
+        minX = std::min(minX, lc.x);
+        maxX = std::max(maxX, lc.x);
+        minY = std::min(minY, lc.y);
+        maxY = std::max(maxY, lc.y);
+        minZ = std::min(minZ, lc.z);
+        maxZ = std::max(maxZ, lc.z);
     }
 
     minZ -= 10.0f;
@@ -330,28 +356,23 @@ void Scene::Render(void)
             depth->setMat4("model", plane_bottom);
             plane.draw();
 
-            const auto plane_top = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 98.0f, 0.0f))
-                * glm::rotate(glm::mat4(1.0f), glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+            const auto plane_top = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 98.0f, 0.0f)) * glm::rotate(glm::mat4(1.0f), glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
             depth->setMat4("model", plane_top);
             plane.draw();
 
-            const auto plane_front = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 48.0f, 50.0f))
-                * glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+            const auto plane_front = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 48.0f, 50.0f)) * glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
             depth->setMat4("model", plane_front);
             plane.draw();
 
-            const auto plane_back = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 48.0f, -50.0f))
-                * glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+            const auto plane_back = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 48.0f, -50.0f)) * glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
             depth->setMat4("model", plane_back);
             plane.draw();
 
-            const auto plane_right = glm::translate(glm::mat4(1.0f), glm::vec3(50.0f, 48.0f, 0.0f))
-                * glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+            const auto plane_right = glm::translate(glm::mat4(1.0f), glm::vec3(50.0f, 48.0f, 0.0f)) * glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
             depth->setMat4("model", plane_right);
             plane.draw();
 
-            const auto plane_left = glm::translate(glm::mat4(1.0f), glm::vec3(-50.0f, 48.0f, 0.0f))
-                * glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+            const auto plane_left = glm::translate(glm::mat4(1.0f), glm::vec3(-50.0f, 48.0f, 0.0f)) * glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
             depth->setMat4("model", plane_left);
             plane.draw();
         }
@@ -449,32 +470,27 @@ void Scene::Render(void)
         plane.draw();
 
         // top
-        const auto plane_top = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 98.0f, 0.0f))
-            * glm::rotate(glm::mat4(1.0f), glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        const auto plane_top = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 98.0f, 0.0f)) * glm::rotate(glm::mat4(1.0f), glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
         toon->setMat4("model", plane_top);
         plane.draw();
 
         // front
-        const auto plane_front = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 48.0f, 50.0f))
-            * glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        const auto plane_front = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 48.0f, 50.0f)) * glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
         toon->setMat4("model", plane_front);
         plane.draw();
 
         // back
-        const auto plane_back = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 48.0f, -50.0f))
-            * glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        const auto plane_back = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 48.0f, -50.0f)) * glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
         toon->setMat4("model", plane_back);
         plane.draw();
 
         // right
-        const auto plane_right = glm::translate(glm::mat4(1.0f), glm::vec3(50.0f, 48.0f, 0.0f))
-            * glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        const auto plane_right = glm::translate(glm::mat4(1.0f), glm::vec3(50.0f, 48.0f, 0.0f)) * glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
         toon->setMat4("model", plane_right);
         plane.draw();
 
         // left
-        const auto plane_left = glm::translate(glm::mat4(1.0f), glm::vec3(-50.0f, 48.0f, 0.0f))
-            * glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        const auto plane_left = glm::translate(glm::mat4(1.0f), glm::vec3(-50.0f, 48.0f, 0.0f)) * glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
         toon->setMat4("model", plane_left);
         plane.draw();
     }
@@ -599,20 +615,22 @@ void Scene::Debug(void)
     {
         ImGui::Checkbox("Snapping Enabled", &vertexSettings.enabled);
 
-        if(vertexSettings.enabled){
+        if (vertexSettings.enabled)
+        {
             ImGui::SliderInt("Vertex Resolution", &vertexSettings.snap_resolution, 1, 10);
         }
     }
 
-    if(ImGui::CollapsingHeader("Affine Texture Mapping")){
+    if (ImGui::CollapsingHeader("Affine Texture Mapping"))
+    {
         ImGui::Checkbox("Affine Enabled", &affineSettings.enabled);
     }
 
-    if(ImGui::CollapsingHeader("Color Quantization"))
+    if (ImGui::CollapsingHeader("Color Quantization"))
     {
         ImGui::Checkbox("Color Quantization Enabled", &colorQuantizationSettings.enabled);
 
-        if(colorQuantizationSettings.enabled)
+        if (colorQuantizationSettings.enabled)
         {
             ImGui::SliderInt("Color Resolution", &colorQuantizationSettings.colors, 1, 64);
         }
