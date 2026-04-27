@@ -132,12 +132,14 @@ postprocess_crt = std::make_unique<ew::Shader>("assets/shaders/fullscreen.vs", "
     const std::vector<SceneObjectInit> sceneObjectInits = {
 
         // name     modelPath                    texturePath                  translation           angle   rotationAxis        scale
-        {"Suzanne", "assets/models/suzanne.obj", "assets/brick_color.jpg", {0.0f, 0.0f, 0.0f}, 0.0f, {0.0f, 1.0f, 0.0f}, {1.0f, 1.0f, 1.0f}},
+        // {"Suzanne", "assets/models/suzanne.obj", "assets/brick_color.jpg", {0.0f, 0.0f, 0.0f}, 0.0f, {0.0f, 1.0f, 0.0f}, {1.0f, 1.0f, 1.0f}},
         {"Chest", "assets/models/Chest.obj", "assets/textures/Chest.png", {8.0f, -2.0f, 0.0f}, 180.0f, {0.0f, 1.0f, 0.0f}, {0.1f, 0.1f, 0.1f}},
         {"Eisle", "assets/models/Eisle.obj", "assets/brick_color.jpg", {-8.0f, -2.0f, 0.0f}, 0.0f, {0.0f, 1.0f, 0.0f}, {0.1f, 0.1f, 0.1f}},
         {"Megaman", "assets/models/Megaman.obj", "assets/brick_color.jpg", {0.0f, 2.0f, 10.0f}, 180.0f, {0.0f, 1.0f, 0.0f}, {0.2f, 0.2f, 0.2f}},
         // {"FirTree", "assets/models/firTree.obj", "assets/textures/firbark.png",    {-5.0f,  2.0f, 10.0f}, 180.0f, {0.0f, 1.0f, 0.0f}, {0.11f, 0.11f, 0.11f}},
         {"Alien", "assets/models/Alien.obj", "assets/textures/Alien.png", {-14.0f, 0.0f, -10.0f}, 30.0f, {0.0f, 1.0f, 0.0f}, {1.0f, 1.0f, 1.0f}},
+        // {"Gun_Battery", "assets/models/Gun_Battery.obj", "assets/textures/Gun_Battery.png", {-0.0f, 0.0f, -10.0f}, 30.0f, {0.0f, 1.0f, 0.0f}, {0.1f, 0.1f, 0.1f}},
+        // {"Sandwich", "assets/models/Sandwich.obj", "assets/textures/Sandwich.png", {.0f, 0.0f, 0.0f}, 30.0f, {0.0f, 1.0f, 0.0f}, {1.0f, 1.0f, 1.0f}},
 
         {"Tree_01", "assets/models/N64_Tree.obj", "assets/textures/N64_Tree.png", {9.76f, 0.0f, -33.25f}, 99.01f, {0.0f, 1.0f, 0.0f}, {0.11f, 0.11f, 0.11f}},
         {"Tree_02", "assets/models/N64_Tree.obj", "assets/textures/N64_Tree.png", {-25.23f, -1.0f, -27.83f}, 266.64f, {0.0f, 1.0f, 0.0f}, {0.10f, 0.10f, 0.10f}},
